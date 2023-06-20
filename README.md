@@ -11,8 +11,10 @@ The backend itself is Go, using SSR (html/template) and some hairy vanilla JS fo
 B2 is Backblaze B2, CF is Cloudflare.
 
 ```bash
+# used for uploading files
 export B2_KEY_ID=
 export B2_KEY=
+# used in events/cloudflare.go to store B2 API key for the CF workers
 export CF_ACCOUNT=
 export CF_API_EMAIL=
 export CF_API_KEY=

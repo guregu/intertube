@@ -1,4 +1,4 @@
-This is the source code for inter.tube, killed by Stripe's policies. inter.tube is (was) an online music storage locker service.
+This is the source code for inter.tube, killed by Stripe's policies. inter.tube is (was) an online music storage locker service with Subsonic API support.
 
 ### Architecture
 

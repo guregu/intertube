@@ -4,7 +4,7 @@ This is the source code for inter.tube, killed by Stripe's policies. inter.tube 
 
 This uses Backblaze B2 to host files. It uses Cloudflare Workers to access B2 so that bandwidth is free.
 
-The backend itself is Go, using SSR (html/template) and some hairy vanilla JS for the browser music player. It runs on AWS Lambda. The data is stored in DynamoDB. There is some functionality for caching user libraries as JSON blobs in S3, but it's kind of a mess.
+The backend itself is Go, using SSR (html/template) and some hairy vanilla JS for the browser music player. It runs on AWS Lambda. The data is stored in DynamoDB. There is some functionality for caching user libraries as JSON blobs in S3 (via DynamoDB Stream event handling lambdas), but it's kind of a mess.
 
 ### Environment variables
 

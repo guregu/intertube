@@ -1,5 +1,7 @@
 This is the source code for inter.tube, killed by Stripe's policies. inter.tube is (was) an online music storage locker service with Subsonic API support.
 
+Note that none of this code was intended to be seen by anyone else, so it's rough, but I hope it is useful to someone. I was inspired to open source it by the recent Apollo debacle.
+
 ### Architecture
 
 This uses Backblaze B2 to host files. It uses Cloudflare Workers to access B2 so that bandwidth is free.

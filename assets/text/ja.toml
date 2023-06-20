@@ -266,6 +266,7 @@ checkout_tryagain = "try again?"
 
 # plan names
 plan = "plan"
+plan_tiny = "tiny plan"
 plan_small = "small plan"
 plan_big = "the default plan"
 plan_huge = "big chungus plan"

@@ -282,12 +282,14 @@ func calcDuration(r io.ReadSeeker, ftype tag.FileType) (int, error) {
 		}
 		sec := stream.Info.NSamples / uint64(stream.Info.SampleRate)
 		return int(sec), nil
-		// case tag.M4A:
-		// 	secs, err := mp4util.Duration(r)
-		// 	if err != nil {
-		// 		return 0, err
-		// 	}
-		// 	return secs, nil
+	case tag.M4A:
+		// TODO: need to find a go library with a proper license that parses these
+		return 0, nil
+		// secs, err := mp4util.Duration(r)
+		// if err != nil {
+		// return 0, err
+		// }
+		// return secs, nil
 	}
 	return 0, fmt.Errorf("unknown type: %v", ftype)
 }

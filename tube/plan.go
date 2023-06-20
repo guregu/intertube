@@ -9,6 +9,7 @@ type PlanKind string
 
 const (
 	PlanKindNone  PlanKind = ""
+	PlanKindTiny  PlanKind = "tiny"
 	PlanKindSmall PlanKind = "small"
 	PlanKindBig   PlanKind = "big"
 	PlanKindHuge  PlanKind = "huge"
@@ -28,6 +29,11 @@ var plans = map[PlanKind]Plan{
 	PlanKindNone: {
 		Kind:  PlanKindNone,
 		Quota: 50 * 1024 * 1024 * 1024, // 50GB
+	},
+	PlanKindTiny: {
+		Kind:    PlanKindTiny,
+		Quota:   50 * 1024 * 1024 * 1024, // 50GB
+		PriceID: "price_1NL7EFKpetgr0YLEouHdIlv1",
 	},
 	PlanKindSmall: {
 		Kind:  PlanKindSmall,

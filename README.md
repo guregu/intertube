@@ -2,6 +2,10 @@ This is the source code for inter.tube, [as seen on HN's "Stripe killed my music
 
 Note that none of this code was intended to be seen by anyone else, so it's rough, but I hope it is useful to someone. I was inspired to open source it by the recent Apollo debacle.
 
+#### Stripe Update
+
+I heard back from a Stripe employee and it turns out this service _is_ OK to host! inter.tube won't die, but it will remain open source.
+
 ### Architecture
 
 This uses Backblaze B2 to host files. It uses Cloudflare Workers to access B2 so that bandwidth is free.
@@ -21,8 +25,6 @@ export CF_ACCOUNT=
 export CF_API_EMAIL=
 export CF_API_KEY=
 export CF_KV_NAMESPACE=
-
-# Stripe stuff, but don't bother until we hear from them
 export STRIPE_ACCOUNT=
 export TEST_STRIPE_PUBLIC=
 export TEST_STRIPE_KEY=

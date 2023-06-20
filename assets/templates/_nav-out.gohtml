@@ -1,0 +1,8 @@
+<nav>
+	<ul>
+		<li class="head"><a href="/" {{if (eq path "/")}} class="active" {{end}}>inter.tube</a></li>
+		<li><a href="/login" {{if (eq path "/login")}} class="active" {{end}}>{{tr "nav_login"}}</a></li>
+		<li><a href="/register" {{if (eq path "/register")}} class="active" {{end}}>{{tr "nav_register"}}</a></li>
+		<li><a href="/buy/" {{if (eq path "/buy/")}} class="active" {{end}}>{{tr "nav_pricing"}}</a></li>
+	</ul>
+</nav>

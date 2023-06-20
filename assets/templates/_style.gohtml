@@ -1,0 +1,181 @@
+<style>
+	{{stylesheet "@" $}}
+	
+	* {
+		box-sizing: border-box;
+	}
+	body {
+		font-family: monospace;
+		font-size: 16px;
+		margin: 0;
+		background: var(--bg);
+		color: var(--fg);
+	}
+	nav {
+		position: -webkit-sticky;
+		position: sticky;
+		font-size: large;
+		width: 100%;
+		background: var(--nav-bg);
+		border-bottom: 1px solid var(--nav-border);
+		padding-top: 8px;
+		padding-left: 8px;
+		padding-right: 8px;
+		padding-bottom: 1px;
+		display: inline-flex;
+		justify-content: space-between;
+	}
+	nav .shortcut {
+		align-self: center;
+		padding-right: 5px;
+	}
+	nav .shortcut a:hover {
+		text-decoration: none;
+	}
+	main > p, main > h2, main > h3, main > div {
+		margin: 8px;
+	}
+	main > form {
+		padding: 0.3em;
+	}
+	main > header {
+		padding-left: 0.3em;
+		padding-right: 0.3em;
+	}
+	nav li {
+		display: inline-block;
+		padding-right: 1em;
+	}
+	nav li.head a, nav li.head a:visited {
+		color: var(--logo);
+	}
+	nav ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	nav a {
+		display: block;
+	}
+	nav a, nav a:visited, .menu a, .menu a:visited, .navlink {
+		text-decoration: none;
+		color: var(--links);
+	}
+	nav a:hover, .menu a:hover {
+		text-decoration: underline;
+	}
+	a.active {
+		text-decoration: underline;
+		font-weight: bold;
+	}
+	.navlink {
+		text-decoration: underline;
+	}
+	.error-msg {
+		color: var(--error, red);
+	}
+	p.error-msg:empty {
+		display: none;
+	}
+	p a, p a:visited, ul a, ul a:visited, footer a, footer a:visited {
+		color: var(--links);
+	}
+
+	span.finger {
+		font-size: larger;
+	}
+
+	.frosty {
+		background: var(--frost-fallback);
+	}
+
+	@supports (-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px)) {
+		.frosty {
+			background: var(--frost-bg);
+			-webkit-backdrop-filter: blur(var(--frost-blur, 6px));
+			backdrop-filter: blur(var(--frost-blur, 6px));
+		}
+	}
+
+	footer {
+		margin-top: 1em;
+		padding-top: 0.5em;
+		padding-left: 0.5em;
+		border-top: 1px solid var(--nav-border, grey);
+	}
+
+	footer#foot {
+		text-align: right;
+	}
+
+	input[type='text'], input[type='email'], input[type="password"], input[type="file"], input[type="submit"], select {
+		max-width: 100%;
+	}
+
+	fieldset {
+		background: rgba(1, 1, 1, 0.1);
+		border-color: var(--nav-border);
+	}
+
+	fieldset legend {
+		font-weight: bold;
+	}
+
+	hr {
+		color: var(--nav-border);
+		border-color: var(--nav-border);
+	}
+
+	.unknown {
+		opacity: 0.6;
+	}
+
+	@media (hover: none) {
+		input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="submit"], input[type="file"], 
+		textarea, select, select:focus {
+			font-size: 16px !important;
+		}
+		form {
+			margin: 0;
+		}
+		form > table {
+			width: 100%;
+			table-layout: fixed;
+		}
+		form > table img {
+			width: 100%;
+			height: auto;
+		}
+	}
+	/* tiny screen (iPhone5) */
+	@media screen and (max-width: 320px) {
+		nav li {
+			padding-right: 0.2em;
+		}
+	}
+	@media screen and (max-width: 767px) {
+		body {
+			-webkit-text-size-adjust: 100%;
+		}
+		.desktop-only {
+			display: none;
+		}
+		nav li.head {
+			width: 100%;
+		}
+		nav .head a {
+			width: 50%;
+		}
+		.mobile-double {
+			font-size: 190%;
+		}
+	}
+	@media screen and (min-width: 768px) {
+		.mobile-only {
+			display: none;
+		}
+		.mobile-double {
+			font-size: 100%;
+		}
+	}
+</style>

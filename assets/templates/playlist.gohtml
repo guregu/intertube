@@ -1,0 +1,332 @@
+<!doctype html>
+<html>
+	{{$editing := (not (eq $.Playlist.ID 0))}}
+	{{$title := "playlist_title"}}
+	{{if $editing}}
+		{{$title := "playlist_title_edit"}}
+	{{end}}
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr $title}}</title>
+		<style>
+			section {
+				margin: 8px;
+			}
+
+			#tracks {
+				max-height: 60vh;
+				overflow: auto;
+				word-break: keep-all;
+				overflow-wrap: normal;
+			}
+
+			ol {
+				margin-block-end: 0;
+			}
+
+			#buttons {
+				display: flex;
+			}
+			#buttons * {
+				margin: 0.2em;
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr $title}}</h2>
+			<p>{{tr "playlist_explain"}}</p>
+
+			<form method="POST" onsubmit="return submitForm(arguments[0]),false;">
+				<section>
+					<fieldset>
+						<legend>{{tr "playlist_basics"}}</legend>
+						<div>
+							<label for="playlist-name">{{tr "playlist_name"}}:</label> <input type="text" id="playlist-name" name="playlist-name" placeholder='{{tr "playlistname"}}' required>
+						</div>
+					</fieldset>
+					
+				</section>
+
+				<section>
+					<fieldset>
+						<legend>{{tr "playlist_filter"}}</legend>
+						<p>{{tr "playlist_filterexplain"}}</p>
+						<ol id="conditions">
+							<li class="button-item">
+								<button onclick="return addCondition(),false;">
+									{{tr "playlist_addcond"}}
+								</button>
+							</li>
+						</ol>
+					</fieldset>
+				</section>
+
+				<section>
+					<fieldset>
+						<legend>{{tr "playlist_sort"}}</legend>
+						<select name="sort-by">
+							<option>{{tr "default"}}</option>
+							<option>{{tr "album"}}</option>
+							<option>{{tr "artist"}}</option>
+							<option>{{tr "year"}}</option>
+							<option>{{tr "lastplay"}}</option>
+						</select>
+						<select name="sort-order">
+							<option>{{tr "asc"}}</option>
+							<option>{{tr "desc"}}</option>
+						</select>
+					</fieldset>
+				</section>
+
+				<section>
+					<div id="buttons">
+						<button onclick="return searchTracks(),false">preview</button>
+						<input type="submit" value="{{if $editing}}{{tr "edit"}}{{else}}{{tr "create"}}{{end}}">
+					</div>
+				</section>
+			</form>
+			
+			<br>
+			<hr>
+
+			{{render "playlist_tracks" $}}
+		</main>
+
+
+		<template id="condition-tmpl">
+			<li class="condition">
+				<select class="condition-include">
+					<option value="include">include</option>
+					<option value="exclude">exclude</option>
+				</select>
+				if
+				<select class="condition-attr" oninput="return rejiggerCond(this),false;">
+					<option value="Artist" data-type="str">{{tr "artist"}}</option>
+					<option value="Album" data-type="str">{{tr "album"}}</option>
+					<option value="AlbumArtist" data-type="str">{{tr "albumartist"}}</option>
+					<option value="Title" data-type="str">{{tr "title"}}</option>
+					<option value="Year" data-type="int">{{tr "year"}}</option>
+					<option value="Track" data-type="int">{{tr "tracknum"}}</option>
+					<option value="LastPlay" data-type="time">{{tr "lastplay"}}</option>
+				</select>
+				<select class="condition-op">
+					<option data-for="*" value="$1 == $2">is</option>
+					<option data-for="*" value="$1 != $2">is not</option>
+					<option data-for="int date" value="$1 < $2">less than</option>
+					<option data-for="int date" value="$1 > $2">greater than</option>
+					<!-- <option data-for="time" value="lastplay.After(now.Add(days(-$2)))">days ago</option> -->
+					<option data-for="time" value="Now() - $1 < Days($2)">days ago</option>
+				</select>
+				<input class="condition-val" type="text" placeholder="value">
+
+				<button onclick="return removeCondition(this),false;">X</button>
+			</li>
+		</template>
+
+		<script>
+			function addCondition() {
+				var tmpl = document.getElementById("condition-tmpl");
+				var conds = document.getElementById("conditions");
+				var btnitem = conds.querySelector(".button-item");
+				var node = tmpl.content.firstElementChild.cloneNode(true);
+				node = conds.insertBefore(node, btnitem);
+				rejiggerCond(node);
+			}
+			window.addEventListener("load", function() {
+				getCache("/music", getCache.bind(window, "/music/albums", addCondition), addCondition);
+			});
+
+			function condParent(elem) {
+				for (var node = elem; node != null && !node.classList.contains("condition"); node = node.parentNode) {}
+				return node;
+			}
+			function removeCondition(elem) {
+				var node = condParent(elem);
+				node.parentNode.removeChild(node);
+			}
+			function rejiggerCond(elem) {
+				var parent = condParent(elem);
+				var attr = parent.querySelector(".condition-attr").value;
+				var opt = parent.querySelector(".condition-attr :checked");
+				if (!opt) {
+					return;
+				}
+				var type = opt.dataset.type;
+				var val = parent.querySelector(".condition-val");
+				var list = document.getElementById("all-" + attr.toLowerCase());
+				if (list) {
+					val.setAttribute("list", list.id);
+				} else {
+					val.removeAttribute("list")
+				}
+				console.log(opt, val);
+
+				for (var o of parent.querySelectorAll(".condition-op option")) {
+					var f = o.dataset.for;
+					if (f == '*' || f.split(" ").includes(type)) {
+						o.style.display = "unset";
+					} else {
+						o.style.display = "none";
+					}
+				}
+			}
+
+			function parseCond(parent) {
+				var inc = parent.querySelector(".condition-include").value == "include";
+				var attr = parent.querySelector(".condition-attr").value;
+				var op = parent.querySelector(".condition-op").value;
+				var val = parent.querySelector(".condition-val").value;
+				var type = parent.querySelector(".condition-attr :checked").dataset.type;
+				val = quoteVal(type, val);
+
+				var expr = op.replace("$1", attr);
+				expr = expr.replace("$2", val);
+				expr = "(" + expr + ")";
+				if (!inc) {
+					expr = "!" + expr;
+				}
+
+				return {
+					inc: inc,
+					attr: attr,
+					op: op,
+					val: val,
+					expr: expr
+				};
+			}
+			function quoteVal(type, val) {
+				switch (type) {
+				case "str":
+					val = val.replace(/"/g, '\\"');
+					val = '"' + val + '"';
+					console.log("quot", val);
+					break;
+				}
+				return val;
+			}
+
+			function parseForm() {
+				var conds = Array.from(document.querySelectorAll(".condition"));
+				var all = [];
+				var expr = "";
+				for (var cond of conds) {
+					if (expr != "") {
+						expr += " and ";
+					}
+					var got = parseCond(cond);
+					expr += got.expr;
+					all.push(got);
+				}
+				return {
+					all: all,
+					expr: expr
+				};
+			}
+
+			function searchTracks() {
+				var form = parseForm();
+				var expr = form.expr;
+					
+				var data = new URLSearchParams();
+				data.append("frag", "tracks");
+				data.append("q", expr);
+
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", "/playlist/?" + data.toString());
+				xhr.onload = function () {
+					if (xhr.status == 200) {
+						document.getElementById("tracks").outerHTML = xhr.response;
+						console.log(xhr.status, xhr.response);
+					} else {
+						console.log(xhr.status, xhr.response);
+					}
+				};
+				xhr.send(null);
+			}
+
+			function submitForm(evt) {
+				console.log(evt);
+				var data = {};
+				var form = evt.target;
+				data.meta = Object.fromEntries(Array.from(new FormData(form)));
+				data.form = parseForm(form);
+				console.log(data);
+				console.log(JSON.stringify(data));
+
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", ".")
+				xhr.setRequestHeader("Content-Type", "application/json");
+				xhr.onload = function () {
+					if (xhr.status == 200) {
+						// TODO: redirect
+						var loc = xhr.getResponseHeader("Location");
+						console.log("OK~!");
+						window.location = loc;
+					} else {
+						console.log(xhr.status, xhr.response);
+					}
+				};
+				xhr.send(JSON.stringify(data));
+
+			}
+
+
+			// TODO: DONT COPYPASTE THIS
+
+			function getCache(href, otherwise, after) {
+				return window.caches.match(href).then(function(resp) {
+					if (!resp) {
+						if (otherwise) { otherwise(); }
+						return;
+					}
+					resp.text().then(function(raw) {
+						var doc = new DOMParser().parseFromString(raw, "text/html");
+						var tracks = doc.querySelectorAll(".track");
+						populate(tracks);
+						after();
+					});
+				});
+			}
+
+			function populate(tracks) {
+				var db = {};
+				var enpluck = function(attr) {
+					var set = db[attr];
+					if (!set) {
+						set = new Set();
+						db[attr] = set;
+					}
+					for (t of tracks) {
+						if (t.dataset[attr]) { 
+							set.add(t.dataset[attr]);
+						}
+					}
+					var eid = "all-" + attr;
+					var elem = document.getElementById(eid);
+					if (!elem) {
+						elem = document.createElement("datalist");
+						elem.id = eid.toLowerCase();
+						document.body.appendChild(elem);
+					}
+					for (v of set) {
+						var opt = document.createElement("option");
+						opt.value = v;
+						elem.appendChild(opt);
+					}
+				}
+
+				enpluck("album");
+				enpluck("artist");
+				enpluck("albumArtist");
+				enpluck("genre");
+				enpluck("title");
+
+				console.log("plucked", db);
+				return db;
+			}
+			
+		</script>
+	</body>
+</html>

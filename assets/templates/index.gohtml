@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "index_title"}}</title>
+		<style>
+			noscript, #unpaid {
+				display: block;
+				font-weight: bold;
+				padding: 1em;
+				background: #aa0909;
+				color: white;
+			}
+
+			#unpaid a, #unpaid a:visited {
+				color: white;
+			}
+
+			table.linktable {
+				table-layout: fixed;
+				width: 100%;
+			}
+
+			table.linktable td:first-child {
+				width: 1.5em;
+			}
+
+			table.linktable td:first-child a {
+				text-decoration: none;
+			}
+
+			#stuff:target {
+				background: var(--hi-bg);
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "index_title"}}</h2>
+			<noscript>{{tr "noscript"}}</noscript>
+			<p>{{tr "loggedinas" $.User.Email}}</p>
+			<p>{{tr "index_intro"}}</p>
+			{{if $.User.Trialing}}
+				{{if $.User.Expired}}
+					{{if $.User.Grandfathered}}
+						<p>※ {{tr "index_grandfathered"}} 🤑</p>
+					{{else}}
+						<p id="unpaid">⚠️ <a href="/buy/">{{tr "index_trialexpired"}}</a></p>
+					{{end}}
+				{{else}}
+					<p>※ {{tr "buy_trialnow" ($.User.TimeRemaining | days)}}</p>
+				{{end}}
+			{{else}}
+				{{if $.User.Expired}}
+					<p id="unpaid">⚠️ <a href="/settings">{{tr "index_subexpired"}}</a></p>
+				{{end}}
+			{{end}}
+
+			<h3>{{tr "index_start"}}</h3>
+			<table class="linktable" id="quickstart">
+				<tr>
+					<td><a href="/upload">📂</a></td>
+					<td><a href="/upload" class="navlink">{{tr "index_start_upload"}}</a></td>
+				</tr>
+				<tr>
+					<td><a href="/music/">🎵</a></td>
+					<td><a href="/music/" class="navlink">{{tr "index_start_library"}}</a></td>
+				</tr>
+				{{if $.User.TrialOver}}
+				<tr>
+					<td><a href="/buy/">💸</a></td><td><a href="/settings/payment" class="navlink">{{tr "index_start_managesub"}}</a></td>
+				</tr>
+				{{else}}
+				<tr>
+					<td><a href="/buy/">💸</a></td><td><a href="/buy/" class="navlink">{{tr "index_start_buy"}}</a></td>
+				</tr>
+				{{end}}
+				<tr>
+					<td><a href="/settings">⚙️</a></td>
+					<td><a href="/settings" class="navlink">{{tr "index_start_settings"}}</a></td>
+				</tr>
+			</table>
+
+			<h3>{{tr "index_more"}}</h3>
+			<table class="linktable" id="stuff">
+				<tr>
+					<td><a href="https://intertube.thread.zone/thread/4/1-50" target="_blank">🆕</a></td>
+					<td><a href="https://intertube.thread.zone/thread/4/1-50" target="_blank" class="navlink">{{tr "index_more_changelog"}}</a></td>
+				</tr>
+				<tr>
+					<td><a href="/subsonic" target="_blank">📲</a></td>
+					<td><a href="/subsonic" target="_blank" class="navlink">{{tr "index_more_subsonic"}}</a></td>
+				</tr>
+				<tr>
+					<td><a href="/sync" target="_blank">🗃️</a></td>
+					<td><a href="/sync" target="_blank" class="navlink">{{tr "index_more_sync"}}</a></td>
+				</tr>	
+				<tr>
+					<td><a href="https://intertube.thread.zone/thread/6/1-50" target="_blank">💻</a></td>
+					<td><a href="https://intertube.thread.zone/thread/6/1-50" target="_blank" class="navlink">{{tr "index_more_desktop"}}</a></td>
+				</tr>
+			<!--
+				<tr>
+					<td><a href="https://intertube.thread.zone/" target="_blank">💬</a></td>
+					<td><a href="https://intertube.thread.zone/" target="_blank" class="navlink">{{tr "index_more_forum"}}</a></td>
+				</tr>
+			-->
+				<tr>
+					<td><a href="mailto:greg.roseberry@gmail.com" target="_blank">🆘 </a></td>
+					<td><a href="mailto:greg.roseberry@gmail.com" target="_blank" class="navlink">{{tr "index_more_help"}}</a></td>
+				</tr>
+			</table>
+
+			<h2>{{tr "index_news"}}</h3>
+			<ul>
+				<li>[2023/05/03] fixed a bug with the "next" button. re-enabled cache, reset it on settings page if it gets weird (and let me know)</li>
+				<li>[2023/04/16] added a <a href="/subsonic" target="_blank" class="navlink">subsonic help page</a></li>
+				<li>[2023/04/16] it's been a while. improved upload page (hopefully less errors) and added the <a href="/sync" target="_blank" class="navlink">experimental sync feature</a></li>
+				<li>[2021/01/27] added native app support via the subsonic API. <a href="/subsonic" target="_blank" class="navlink">check it out</a>.</li>
+				<li>[2021/01/18] we have a soft launch! subscriptions are now available. registration is open with a 14-day free trial.</li>
+			</ul>
+
+			<h2>{{tr "index_comingsoon"}}</h2>
+			<ul>
+				<li><s>going to experiment with adding subsonic API support so you can use native apps</s>
+					<ul><li>🆙 subsonic API beta now <a href="/subsonic" target="_blank" class="navlink">available</a>!</li></ul>
+				</li>
+				<li>library UI improvements (play count, tags, folder view?)</li>
+				<li>desktop app for uploading stuff</li>
+				<li>what features do you want to see? send me an e-mail.</li>
+			</ul>
+		</main>
+	</body>
+</html>

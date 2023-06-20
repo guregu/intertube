@@ -1,0 +1,65 @@
+<table id="playlist" {{with $.Next}} data-next="{{.}}" {{end}}>
+	<thead>
+		<tr>
+			<th class="track-status">&nbsp;</th>
+			<th class="track-artist sort-row">
+				<!-- {{tr "artist"}} -->
+				<!-- <a href="/music?sort={{if (and (eq $.Sort "artist") (not $.Reverse))}}-{{end}}artist" onmouseover="prefetch(this);" onclick="return visit(this),false;" {{if (eq $.Sort "artist")}} class="active" {{end}} data-reverse="{{$.Reverse}}">{{tr "artist"}}</a> -->
+				<a href="/music?sort={{if (and (eq $.Sort "artist") (not $.Reverse))}}-{{end}}artist" onclick="return toggleSort(this),false;" {{if (eq $.Sort "artist")}} class="active" {{end}} data-order="artist" data-reverse="{{(and (eq $.Sort "artist") $.Reverse)}}">{{tr "artist"}}</a>
+			</th>
+			<th class="track-album sort-row">
+				<!-- {{tr "album"}} -->
+				<a href="/music?sort={{if (and (eq $.Sort "album") (not $.Reverse))}}-{{end}}album" onclick="return toggleSort(this),false;" {{if (eq $.Sort "album")}} class="active" {{end}} data-order="album" data-reverse="{{(and (eq $.Sort "album") $.Reverse)}}">{{tr "album"}}</a>
+			</th>
+			<th class="track-title sort-row">
+				<!-- {{tr "title"}} -->
+				<a href="/music?sort={{if (and (eq $.Sort "title") (not $.Reverse))}}-{{end}}title" onclick="return toggleSort(this),false;" {{if (eq $.Sort "title")}} class="active" {{end}} data-order="title" data-reverse="{{(and (eq $.Sort "title") $.Reverse)}}">{{tr "title"}}</a>
+			</th>
+			<th class="track-pic"><!--{{tr "cover"}}--></th>
+		</tr>
+	</thead>
+	<tbody id="tracks-list" class="meat" data-sort="{{$.Sort}}" data-reverse="{{$.Reverse}}">
+		{{range $.Tracks}}
+			<tr id="{{.ID}}" class="track" data-date="{{.Date}}" data-src="{{.FileURL}}" data-state="stopped" data-resume="{{.Resume}}"
+				data-artist="{{.Info.Artist}}" data-album-artist="{{.Info.AlbumArtist}}" data-any-artist="{{.AnyArtist}}" 
+				data-title="{{.Info.Title}}" data-album="{{.Info.Album}}" data-genre="{{.Genre}}"
+				{{if (gt (len .Tags) 0)}} data-tags="{{.Tags | bespace}}" {{end}}
+				onclick="return toggleTrack('{{.ID}}', arguments[0]),false;">
+				<td class="track-status">
+					<span class="status-stopped">
+						<a tabindex=0 onclick="arguments[0].stopPropagation();return playTrack('{{.ID}}', false, arguments[0]),false;">
+							<span class="play-fresh">▶️</span>
+							<span class="play-resume">↪️</span>
+						</a>
+					</span>
+					<span class="status-playing">
+						<a tabindex=0 onclick="arguments[0].stopPropagation();return pauseTrack('{{.ID}}', false, arguments[0]),false;">⏸️</a>
+					</span>
+				</td>
+				<td class="track-artist">
+					<a tabindex="0" onclick="arguments[0].stopPropagation();return setFilter('artist:{{.AnyArtist}}'),false;">
+						{{if .Info.Artist}}
+							{{.Info.Artist}}
+						{{else}}
+							{{.Info.AlbumArtist}}
+						{{end}}
+					</a>
+					<!-- TODO: composer -->
+				</td>
+				<td class="track-album">
+					<a tabindex="0" onclick="arguments[0].stopPropagation();return setFilter('album:{{.Album}}'),false;">
+						{{.Info.Album}}
+					</a>
+				</td>
+				<td class="track-title">
+					{{with .Info.Title}}{{.}}{{else}}untitled{{end}}
+				</td>
+				<td class="track-pic" onclick="arguments[0].stopPropagation();return setFilter('album:{{.Album}}'),false;">
+					{{if .Picture.ID}}
+						<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | cdn}}" loading="lazy">
+					{{end}}
+				</td>
+			</tr>
+		{{end}}
+	</tbody>
+</table>

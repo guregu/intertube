@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "checkout_fail"}}</title>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "checkout_fail"}}</h2>
+			<p>{{tr "checkout_failexplain"}}</p>
+			<p>{{tr "checkout_status"}}: {{$.Status}}</p>
+			<p><a href="/buy/">{{tr "checkout_tryagain"}}</a></p>
+		</main>
+	</body>
+</html>

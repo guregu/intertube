@@ -1,0 +1,566 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "upload_title"}}</title>
+		<style>
+			table {
+				width: 100%;
+				/*border: 1px solid black;*/
+				margin-top: 1em;
+				margin-bottom: 1em;
+				table-layout: fixed;
+			}
+			table th {
+				text-align: left;
+			}
+			table tr :first-child {
+				width: 2em;
+			}
+
+			.track-error {
+				color: red;
+			}
+			.track-error:not(:empty) + progress {
+				display: none;
+			}
+
+			table tr :nth-child(3) {
+				width: 2em;
+			}
+			.track-edit a {
+				text-decoration: none;
+			}
+			.track-edit a:not([href]) {
+				display: none;
+			}
+			.track-edit a[href] {
+				display: unset;
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "upload_title"}}</h2>
+			<p>{{tr "upload_intro"}}</p>
+			<p>{{tr "currentusage"}}: <b>{{$.User.Usage | bytesize}}</b> / {{tr "quota"}}: <b>{{$.User.CalcQuota | bytesize}} ({{$.User.UsageDesc}}%)</b></p>
+			{{if $.User.StorageFull}}
+				<p class="error-msg">
+					⚠️ <b>{{tr "upload_full"}}</b><br>
+					{{tr "upload_fullexplain"}}<br>
+					{{tr "upload_cant"}}
+				</p>
+			{{end}}
+			<div>
+				<form method="post" action="/upload/track" enctype="multipart/form-data" id="file-upload-form" onsubmit="return uploadFile(),false;">
+					<label for="file-input"><b>{{tr "upload_label"}}</b>:
+					<input type="file" name="file" id="file-input" accept=".mp3,.flac,audio/flac,audio/x-flac,.m4a" multiple> <input type="submit" id="file-upload-button" value='{{tr "upload_button"}}'> <br>
+					<label for="file-enabledir">{{tr "enabledirectories"}}:</label> <input type="checkbox" id="file-enabledir" onchange="return enableDirectories(this),false;"><br>
+					<label for="file-skipdupe">{{tr "upload_skipdupe"}}:</label> <input type="checkbox" id="file-skipdupe" checked><br>
+				</form>
+			</div>
+
+			<hr>
+
+			<p>
+				<span id="stat-success">0</span> successful, 
+				<span id="stat-skipped">0</span> skipped, 
+				<span id="stat-failed">0</span> failed, 
+				<span id="stat-pending">0</span> pending
+			</p>
+
+			<table>
+				<thead>
+					<tr>
+						<th>&nbsp;</th>
+						<th>track</th>
+						<th></th>
+						<th>progress</th>
+					</tr>
+				</thead>
+				<tbody id="upload-tracks">
+					<!-- tracks go here -->
+				</tbody>
+			</table>
+		</main>
+
+		<template id="upload-track">
+			<tr class="upload-entry">
+				<td class="track-icon">⏳</td>
+				<td class="track-name"></td>
+				<td class="track-edit"><a target="_blank" title="edit track metadata">📝</a></td>
+				<td class="track-status"><span class="track-error"></span><progress class="track-progress" value="0" max="100"></progress></td>
+			</tr>
+		</template>
+
+		<script>
+		var UPLOAD_API = "/upload/track";
+		var RETRY_DELAY = 500;
+		var RETRY_MAX = 5;
+		var DUPES = {{$.Dupes}};
+		var CONCURRENCY = 5;
+		var JOBS = [];
+		var RUNNING = new Set();
+		var STATS = {
+			success: 0,
+			skipped: 0,
+			failed: 0,
+			pending: 0,
+		};
+
+		function incStat(key) {
+			if (key) {
+				STATS[key]++;
+			}
+			STATS.pending = Array.from(RUNNING.values()).length + JOBS.length;
+			for (const [k, v] of Object.entries(STATS)) {
+				const elem = document.getElementById("stat-" + k);
+				elem.textContent = v;
+			}
+		}
+
+		function uploadDragover(event) {
+			event.preventDefault();
+		}
+		document.addEventListener("dragover", uploadDragover, true);
+
+		function uploadDrop(event) {
+			event.preventDefault();
+
+			var items = event.dataTransfer.items;
+			if (items && items.length > 0) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					var entry = null;
+					if (item.webkitGetAsEntry) {
+						entry = item.webkitGetAsEntry();
+					}
+					if (!entry && item.getAsEntry) {
+						entry = item.getAsEntry();
+					}
+					if (!entry) {
+						console.log("couldn't get entry...")
+						continue
+					}
+					if (entry.isDirectory) {
+						uploadFolder(entry);
+						continue;
+					}
+					uploadTrack(item.getAsFile());
+				}
+				return;
+			}
+
+			var files = event.dataTransfer.files;
+			for (var i = 0; i < files.length; i++) {
+				var file = files[i];
+				uploadTrack(file);
+			}
+		}
+		document.addEventListener("drop", uploadDrop, true);
+
+		function enableDirectories(elem) {
+			var input = document.getElementById("file-input");
+			input.webkitdirectory = elem.checked;
+			input.directory = elem.checked;
+			input.click();
+		}
+
+		function uploadFile(event) {
+			var btn = document.getElementById("file-upload-button");
+			var form = document.getElementById("file-upload-form");
+			var files = document.getElementById("file-input").files;
+
+			btn.disabled = true;
+			btn.value = "{{tr "uploading"}}...";
+
+			[].forEach.call(files, function(file) {
+				uploadTrack(file);
+				return;
+				// TODO:
+				// if (isImageFile(file)) {
+				// 	uploadImage(file, reply);
+				// } else {
+				// 	uploadTrack(file, reply);
+				// }
+			});
+
+			form.reset();
+			btn.disabled = false;
+			btn.value = "{{tr "upload_button"}}";
+
+			return false;
+		}
+
+		function uploadFolder(dir) {
+			var r = dir.createReader();
+			var scanDir = function(entries) {
+				entries.forEach(function(entry) {
+					console.log("entry", entry);
+					if (entry.isDirectory) {
+						uploadFolder(entry);
+					} else {
+						entry.file(function(f) {
+							uploadTrack(f);
+						}, function(err) {
+							console.log("upload error:", err);
+						});
+					}
+				});
+				if (entries.length > 0) {
+					r.readEntries(scanDir);
+				}
+			}
+			r.readEntries(scanDir);
+		}
+
+		function uploadTrack(file, retryID, resetRetry) {
+			var getEntry = file.webkitGetAsEntry || file.getAsEntry;
+			if (getEntry) {
+				var entry = getEntry();
+				if (entry.isDirectory) {
+					uploadFolder(entry);
+					return;
+				}
+			}
+
+			if (resetRetry) {
+				file.retries = 0;
+			}
+			
+			var pseudoID = retryID || null;
+			if (pseudoID) {
+				unsetError(pseudoID);
+			} else {
+				pseudoID = prepareUpload(file.name, file.size, new Date());
+			}
+
+			if (isDupe(file)) {
+				console.log("skipping dupe:", file);
+				setSkipped(pseudoID, file.name);
+				incStat("skipped");
+				return;
+			}
+
+			if (file.type != "audio/mpeg" && file.type != "audio/mp3" && file.type != "audio/flac" && file.type != "audio/x-flac" &&
+				file.type != "audio/mp4" && file.type != "audio/m4a" && file.type != "audio/x-m4a" &&
+				!file.name.endsWith(".mp3") && !file.name.endsWith(".flac") && !file.name.endsWith(".m4a")) {
+				setError(pseudoID, '{{tr "badfiletype"}}');
+				return;
+			}
+
+			const job = () => {
+				var data = new FormData();
+				data.append("name", file.name);
+				data.append("type", file.type);
+				data.append("size", file.size);
+				data.append("lastmod", file.lastModified);
+
+				var maybeRetry = function(status, resp) {
+					setError(pseudoID, "Upload error: " + (resp || "connection error"));
+					if (canRetry(status, resp)) {
+						if (resp == null) {
+							// called from xhr.onerror
+							resp = "connection error";
+						}
+						file.retries = (file.retries || 0) + 1;
+						console.log("retrying...", pseudoID);
+						setError(pseudoID, "Retrying after error... " + file.retries);
+						if (file.retries > RETRY_MAX) {
+							setError(pseudoID, "Failed after retrying " + RETRY_MAX + " times: " + resp);
+							return;
+						}
+						setTimeout(uploadTrack, RETRY_DELAY * Math.pow(2, file.retries), file, pseudoID);
+					}
+				};
+
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", UPLOAD_API);
+				xhr.onload = function() {
+					switch (xhr.status) {
+					case 400:
+					case 401:
+					case 408:
+					case 429:
+					case 500:
+					case 502:
+					case 503:
+					case 504:
+						setError(pseudoID, "Upload error: " + xhr.response);
+						maybeRetry(xhr.status, xhr.response);
+						return;
+					case 200:
+						var meta = JSON.parse(xhr.response);
+						meta.pseudoID = pseudoID;
+						addTrack(pseudoID, meta, file.name);
+						job.ID = meta.ID;
+						uploadS3(meta, file, job);
+						return;
+					}
+				}
+				xhr.onerror = maybeRetry.bind(this, -1, null);
+				xhr.send(data);
+			};
+			job.pseudoID = pseudoID;
+			pushJob(job);
+			work();
+			incStat();
+		}
+
+		function pushJob(job) {
+			JOBS.push(job);
+		}
+
+		function popJob() {
+			const j = JOBS.shift();
+			RUNNING.add(j);
+			j();
+		}
+
+		function work() {
+			while (Array.from(RUNNING.values()).length < CONCURRENCY && JOBS.length > 0) {
+				popJob();
+			}
+			incStat();
+		}
+
+		function canRetry(status, response) {
+			if (status == -1) {
+				// connection error
+				return true;
+			}
+			if (status >= 500 && status < 600) {
+				return true;
+			}
+			if (status == 401 || status == 403 || status == 408 || status == 429) {
+				return true;
+			}
+			console.log("can't retry:", status, response);
+			return false;
+		}
+
+		function uploadS3(meta, file, job) {
+			var fileID = meta.ID;
+			var url = meta.URL;
+			var disp = meta.CD;
+			var filename = "up/" + meta.ID;
+			console.log("s3 up: ", meta);
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("PUT", url);
+			xhr.upload.onprogress = function(evt) {
+				if (evt.loaded == evt.total) {
+					setProgress(fileID, -1);
+					return;
+				}
+				var pct = Math.min(99, Math.round(evt.loaded/evt.total * 100));
+				setProgress(fileID, pct);
+			}
+			xhr.onload = function() {
+				if (xhr.status == 200) {
+					// var b2info = JSON.parse(xhr.response);
+					var b2info = {
+						tubeID: fileID,
+						b2ID: xhr.getResponseHeader("x-amz-version-id")
+					};
+					console.log("b2", b2info);
+					finishS3Upload(b2info, undefined, job);
+				} else {
+					console.log("b2 upload error:", xhr.status, xhr.response);
+					if (canRetry(xhr.status, xhr.response)) {
+						uploadTrack(file, meta.pseudoID, true);
+						return;
+					}
+					setError(fileID, '{{tr "failedupload"}} ' + xhr.status + ": " + xhr.response);
+					RUNNING.delete(job);
+					work();
+					incStat("failed");
+					console.log("job failed", job);
+				}
+			}
+			xhr.onerror = function() {
+				// retry
+				uploadTrack(file, meta.pseudoID, true);
+				return;
+			}
+			xhr.setRequestHeader("Content-Type", file.type);
+			xhr.setRequestHeader("Content-Disposition", disp);
+			xhr.send(file);
+		}
+
+		function finishS3Upload(info, retries, job) {
+			var fileID = info.tubeID;
+			var b2ID = info.b2ID;
+			console.log("up finish: ", fileID, b2ID);
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", UPLOAD_API + "/" + fileID + "?bid=" + b2ID);
+			xhr.onload = function() {
+				if (xhr.status == 200) {
+					setProgress(fileID, 100);
+					setMetadata(fileID, JSON.parse(xhr.response));
+					RUNNING.delete(job);
+					work();
+					console.log("job success", job);
+					incStat("success");
+				} else {
+					// setProgress(fileID, -1);
+					setError(fileID, xhr.response);
+					if (canRetry(xhr.status, xhr.response)) {
+						retries = (retries || 0) + 1;
+						console.log("retrying s3finish...", fileID);
+						setError(fileID, "Retrying after error... " + retries);
+						if (retries > RETRY_MAX) {
+							setError(fileID, "Failed after retrying " + RETRY_MAX + " times: " + xhr.response);
+							RUNNING.delete(job);
+							work();
+							console.log("job failed2", job);
+							incStat("failed");
+							return;
+						}
+						setTimeout(finishS3Upload, RETRY_DELAY * Math.pow(2, retries), info, retries, job);
+					}
+				}
+			}
+			xhr.onerror = function() {
+				setTimeout(finishS3Upload, RETRY_DELAY * 1, info, retries, job);
+			}
+			xhr.send(null);
+		}
+
+		function prepareUpload(filename, size, time) {
+			var pseudoID = String(size) + time.getTime() + Math.round(Math.random() * 10000000000);
+			var table = document.getElementById("upload-tracks");
+			var tmpl = document.getElementById("upload-track");
+			var track = tmpl.content.cloneNode(true);
+			track.querySelector("tr").dataset.filename = filename;
+			track.querySelector("tr").dataset.pseudo = pseudoID;
+			track.querySelector("tr").dataset.status = "uploading";
+			track.querySelector(".track-name").textContent = filename;
+			table.appendChild(track);
+			return pseudoID;
+		}
+
+		function addTrack(pseudoID, meta, name) {
+			var id = meta.ID;
+			var track = document.querySelector("[data-pseudo='" + pseudoID + "']");
+			if (!track) {
+				var table = document.getElementById("upload-tracks");
+				var tmpl = document.getElementById("upload-track");
+				track = tmpl.content.cloneNode(true);
+				track.querySelector("tr").id = id;
+				track.querySelector(".track-name").textContent = name;
+				table.appendChild(track);
+			}
+
+			track.id = id;
+			track.dataset.status = "uploading";
+			console.log("set", pseudoID, "=", id);
+			return id;
+		}
+
+		function setProgress(id, progress) {
+			var track = document.getElementById(id);
+			if (!track) {
+				console.log("no track:", id, progress);
+				return;
+			}
+			var bar = track.querySelector(".track-progress");
+			if (progress >= 0) {
+				bar.setAttribute("value", progress);
+			} else {
+				bar.removeAttribute("value");
+			}
+			if (progress == 100) {
+				track.querySelector(".track-icon").textContent = "✔️"
+				track.dataset.status = "success";
+			}
+		}
+
+		function setSkipped(id, filename) {
+			var track = document.querySelector("[data-pseudo='" + id + "']") || document.getElementById(id);
+			if (!track) {
+				console.log("no track:", id, filename);
+				return;
+			}
+			
+			var bar = track.querySelector(".track-progress");
+			bar.setAttribute("value", 100);
+
+			track.querySelector(".track-icon").textContent = "⏭️"
+			track.querySelector(".track-status").textContent = "skipped (duplicate)";
+			track.dataset.status = "success";
+		}
+
+		function setError(id, errormsg) {
+			var track = document.getElementById(id);
+			if (!track) {
+				track = document.querySelector("[data-pseudo='" + id + "']");
+			}
+			if (!track) {
+				console.log("no track:", id);
+				return;
+			}
+			track.querySelector(".track-error").textContent = "error: " + errormsg;
+			track.querySelector(".track-icon").textContent = "❌";
+			track.dataset.status = "failed";
+		}
+
+		function unsetError(id) {
+			var track = document.getElementById(id);
+			if (!track) {
+				track = document.querySelector("[data-pseudo='" + id + "']");
+			}
+			if (!track) {
+				console.log("no track:", id);
+				return;
+			}
+			track.querySelector(".track-error").textContent = "";
+			track.querySelector(".track-icon").textContent = "🙏";
+		}
+
+		function setMetadata(id, meta) {
+			var track = document.getElementById(id);
+			if (!track) {
+				console.log("no track:", id);
+				return;
+			}
+			console.log(meta);
+			var name = meta.Info.Artist + " - " + meta.Info.Album + " - " + meta.Info.Title;
+			track.querySelector(".track-name").textContent = name;
+			track.querySelector(".track-edit a").href = "/track/" + meta.ID + "/edit";
+		}
+
+		var DUPE_CHECKBOX = document.getElementById("file-skipdupe");
+		function isDupe(file) {
+			if (!DUPE_CHECKBOX.checked) {
+				return false;
+			}
+
+			var meta = DUPES[file.name];
+			if (!meta) {
+				return false;
+			}
+			for (m of meta) {
+				if (file.size == m.Size && (m.LastMod == 0 || file.lastModified == m.LastMod)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		function inProgress() {
+			return document.querySelectorAll(".upload-entry[data-status='uploading']").length > 0;
+		}
+
+		window.addEventListener("beforeunload", function(event) {
+			if (!inProgress()) {
+				return;
+			}
+			event.preventDefault();
+			event.returnValue = '{{tr "upload_inprogress"}}';
+		});
+		</script>
+	</body>
+</html>

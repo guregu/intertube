@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "forgot_title"}}</title>
+	</head>
+	<body>
+		<main>
+			<h2>{{tr "forgot_title"}}</h2>
+			<p>{{tr "forgot_intro"}}</p>
+			<p class="error-msg">{{$.ErrorMsg}}</p>
+			<form action="/forgot" method="POST">
+				<table class="form-table">
+					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" autocomplete="email" required></td></tr>
+					<tr><td></td><td><input type="submit" value='{{tr "forgot_send"}}'></td></tr>
+				</table>
+			</form>
+			<footer>
+				← <a href="/login">{{tr "login_nevermind"}}</a>
+			</footer>
+		</main>
+	</body>
+</html>

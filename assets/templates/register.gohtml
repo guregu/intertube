@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "reg_title"}}</title>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "reg_title"}}</h2>
+			<p>{{tr "reg_intro"}}</p>
+			<p>※ {{tr "buy_trial"}}. {{tr "reg_nocc"}}</p>
+			<p class="error-msg">{{$.ErrorMsg}}</p>
+			<form action="/register" method="POST" onsubmit="return checkForm();">
+				<table class="form-table">
+					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" autocomplete="email" value="{{$.Email}}" required></td></tr>
+					<tr><td><label for="password">{{tr "password"}}:</label></td><td><input type="password" autocomplete="new-password" id="password" name="password" required></td></tr>
+					<tr><td><label for="password-confirm">{{tr "passwordconfirm"}}:</label></td><td><input type="password" autocomplete="new-password" id="password-confirm" name="password-confirm" required></td></tr>
+					<!-- <tr><td><label for="secret">{{tr "invitecode"}}:</label></td><td><input type="text" id="secret" name="secret" value="{{$.Invite}}" required></td></tr> -->
+					<tr><td></td><td><input type="checkbox" name="agree" id="agree" required> i agree to the <a href="/terms" target="_blank" class="navlink">{{tr "nav_tos"}}</a> and <a href="/privacy" target="_blank" class="navlink">{{tr "nav_privacy"}}</a></td></tr>
+					<tr><td></td><td><input type="submit" value='{{tr "register"}}'></td></tr>
+				</table>
+			</form>
+			<p>
+				{{tr "login_cookies"}}<br>
+				<!-- {{tr "login_cookies2"}} (<a href="https://support.cloudflare.com/hc/en-us/articles/200170156-Understanding-the-Cloudflare-Cookies" target="_blank">{{tr "login_cookiescf"}}</a>) -->
+			</p>
+			{{render "_foot" $}}
+		</main>
+		<script>
+			function checkForm() {
+				var agree = document.getElementById("agree");
+				if (!agree.checked) {
+					alert('{{tr "reg_mustagree"}}');
+					return false;
+				}
+				return true;
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,34 @@
+<div id="playlist" class="meat" {{with $.Next}} data-next="{{.}}" {{end}}>
+	{{range $album := $.Albums}}
+	{{$first := index $album 0}}
+	<div class="album meat-partial" id="{{$first.AlbumCode}}" data-album="{{$first.Album}}" data-artist="{{$first.Artist}}" data-title="{{range $album}} {{.Title}} {{end}}">
+		<div class="album-inner">
+			{{if $first.Picture.ID}}
+				<img class="album-cover" alt="{{$first.Picture.Desc}}" src="{{$first.Picture.S3Key | cdn}}" loading="lazy" onclick="return selectAlbum(this, arguments[0]) || toggleOrPlay('{{$first.ID}}'),false;">
+			{{else}}
+				<div class="album-cover placeholder"></div>
+			{{end}}
+			<div class="album-info">
+				<h3><a class="album-artist" tabindex=0 onclick="arguments[0].stopPropagation();return setFilter('artist:{{$first.AnyArtist}}'),false;">{{$first.Info.Artist}}</a> - {{$first.Info.Album}}</h3>
+				<ol class="meat-merge">
+				{{range $album}}
+					<li {{with .Number}} value="{{.}}" {{end}}
+						id="{{.ID}}" class="track" data-date="{{.Date}}" data-src="{{.FileURL}}" data-state="stopped"
+						data-artist="{{.Artist}}" data-title="{{.Title}}" data-album="{{.Album}}"
+						onclick="return toggleOrPlay('{{.ID}}', arguments[0]),false;">
+						<span class="track-title">{{.Info.Title}}</span>
+						<span class="track-artist" style="display: none;">{{.Info.Artist}}</span>
+						<span class="track-album" style="display: none;">{{.Info.Album}}</span>
+						<span class="track-pic" style="display: none;">
+							{{if .Picture.ID}}
+								<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | cdn}}" loading="lazy">
+							{{end}}
+						</span>
+					</li>
+				{{end}}
+				</ol>
+			</div>
+		</div>
+	</div>
+	{{end}}
+</div>

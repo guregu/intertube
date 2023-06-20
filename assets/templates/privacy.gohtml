@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "privacy_title"}}</title>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "privacy_title"}}</h2>
+			<p>☛ see also: <a href="/terms">{{tr "tos_title"}}</a></p>
+			<p>We (inter.tube) strive to keep your personal information safe and secure. We won't sell or abuse your personal information.</p>
+			<h3>Personal information</h3>
+			<p>
+				<ul>
+					<li>We only store personal information (e-mail, IP address) strictly necessary for facilitating our service and protecting your account's security.</li>
+					<li>We will keep your personal information safe.</li>
+					<li>We partner with Stripe to process your payment information. This is securely handled by Stripe and not stored here.</li>
+					<li>We don't use third-party analytics.</li>
+					<li>We will never share your personal information with third-parties.</li>
+					<li>We will never provide your listening data to third-parties, unless you opt-in to scrobbling data (not yet implemented).</li>
+				</ul>
+			</p>
+			<h3>Cookies</h3>
+			<p>
+				<ul>
+					<li>We only use cookies strictly necessary for providing service.</li>
+					<!-- <li>Your content is served by CloudFlare which may set cookies to grant access to your content and prevent abuse.</li> -->
+					<li>We don't set any analytics, tracking, or advertising cookies.</li>
+					<li>The purchase page may use a cookie from Stripe to prevent fraud.</li>
+				</ul>
+			</p>
+			<h3>E-mail</h3>
+			<p>
+				<ul>
+					<li>We only use your e-mail to provide your account and inform you of important service messages.</li>
+					<li>We don't use your e-mail for marketing or advertising. You may opt-in to an optional newsletter to receive updates about the site.</li>
+					<li>We provide your e-mail to Stripe to allow you to pay for the service and receive important messages regarding your payments and subscription.</li>
+				</ul>
+			</p>
+			<h3>Security</h3>
+			<p>
+				<ul>
+					<li>We store passwords with a secure hash function.</li>
+					<li>We don't store your financial information.</li>
+					<li>All communications go through HTTPS.</li>
+					<li>In the event of a data breach, affected users will be notified via e-mail.</li>
+				</ul>
+			</p>
+		</main>
+		{{render "_foot" $}}
+	</body>
+</html>

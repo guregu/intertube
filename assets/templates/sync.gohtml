@@ -1,0 +1,292 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "sync_title"}}</title>
+		<style>
+			#sorry {
+				display: none;
+			}
+			#progress-area {
+				visibility: hidden;
+				line-height: 1.2;
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "sync_title"}}</h2>
+			<p>{{tr "sync_intro"}}</p>
+
+			<p>note: beta version. <br>
+				- has a fixed folder structure of <u>Album/Artist/01 Title</u><br>
+				- only downloads for now<br>
+				- can't overwrite local files
+			</p>
+
+			<div>
+				<fieldset>
+					<legend>options</legend>
+					<input id="opt-dl" type="checkbox" checked><label for="opt-dl">download</label>
+					<br>
+					<input id="opt-up" type="checkbox"><label for="opt-ul"><s>upload</s> (not working yet)</label>
+				</fieldset>
+
+				<div style="margin: 1em;">
+					<label for="sync-btn">{{tr "sync_libdir"}}</label>: <button id="sync-btn" onclick="return pickDir(arguments[0]),false;">{{tr "sync_pickdir"}}</button>
+					<br><br>
+					<div id="progress-area">
+						{{tr "sync_progress"}}: <progress id="progress" value="0" max="0"></progress> <span id="progress-icon"></span> <br>
+						<span id="progress-msg"></span>
+					</div>
+				</div>
+			</div>
+
+			<div id="sorry" class="error-msg">
+				<h3>⚠️sorry</h3>
+				{{tr "sync_sorry"}} 
+				<br><a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker#browser_compatibility" target="_blank" class="navlink">supported browsers</a>
+				🙇‍🙇‍
+			</div>
+
+			<div id="tables">
+			</div>
+		</main>
+
+		<template id="table-tmpl">
+			<div>
+				<h3 class="table-title"></h3>
+				<table>
+				</table>
+			</div>
+		</template>
+
+		<template id="table-item">
+			<tr class="table-entry">
+				<td class="item-icon"><input type="checkbox" class="item-enabled" checked></td>
+				<td class="item-name"></td>
+			</tr>
+		</template>
+
+		<script>
+		var DIR = null;
+		var LIB = {{$.Metadata}};
+		var INDEX = {{$.Index}};
+		var BTN = document.getElementById("sync-btn");
+		var PROGRESS = document.getElementById("progress");
+		var ICON = document.getElementById("progress-icon");
+		var MSG = document.getElementById("progress-msg");
+		var OPT_DL = document.getElementById("opt-dl");
+		var OPT_UP = document.getElementById("opt-up");
+		var OPT_OVERWRITE = document.getElementById("opt-overwrite");
+
+
+		function pickDir(event) {
+			if (!window.showDirectoryPicker) {
+				alert("Sorry, your browser doesn't support this :(");
+				return;
+			}
+			showDirectoryPicker({
+				startIn: "music"
+			}).then(function(dir) {
+				BTN.disabled = true;
+				document.getElementById("progress-area").style.visibility = "visible";
+
+				DIR = dir;
+				scan(DIR);
+			})
+		}
+
+		async function scan(dir) {
+			resetProgress();
+			document.getElementById("tables").textContent = "";
+
+			var result = await scanDir(dir);
+
+			if (OPT_UP.checked) {
+				showTable("upload", result.upload);
+			}
+
+			if (OPT_DL.checked) {
+				var need = new Map();
+				for (track of LIB) {
+					if (!result.local.get(track.ID)) {
+						need.set(track.ID, track);
+					}
+				}
+				console.log("need:", need);
+				showTable("download", need);
+			}
+
+			BTN.disabled = false;
+		}
+
+		function findTrack(id) {
+			for (track of LIB) {
+				if (track.ID == id) {
+					return track;
+				}
+			}
+			return null;
+		}
+
+		function showTable(tableName, files) {
+			var area = document.getElementById(tableName + "-area");
+			if (!area) {
+				var tmpl = document.getElementById("table-tmpl");
+				var frag = tmpl.content.cloneNode(true);
+				area = frag.querySelector("div");
+				area.id = tableName + "-area";
+				area.querySelector(".table-title").textContent = tableName;
+				document.getElementById("tables").appendChild(area);
+			}
+
+			var table = area.querySelector("table");
+
+			var tmpl = document.getElementById("table-item");
+			for (const [id, file] of files.entries()) {
+				var track = tmpl.content.cloneNode(true);
+				track.querySelector("tr").dataset.id = id;
+				track.querySelector(".item-name").textContent = file.filename || file.Path;
+				table.appendChild(track);
+			}
+		}
+
+		async function scanDir(dir, result, path) {
+			if (!result) {
+				result = {
+					upload: new Map(),
+					local: new Map()
+				};
+			}
+			if (!path) {
+				path = [];
+			} else {
+				path = path.concat(dir.name);
+			}
+
+			let entries = dir.entries();
+
+			for await (const [key, item] of entries) {
+				if (item.kind == "directory") {
+					await scanDir(item, result, path);
+					continue;
+				}
+				
+			    var f = await item.getFile();
+			    if (!isAudioFile(f)) {
+			    	continue;
+			    }
+
+			    incMax();
+			    var buf = await f.arrayBuffer();
+			    var hash = await crypto.subtle.digest("SHA-1", buf);
+			    var id = buf2hex(hash);
+			    incProgress();
+			    result.local.set(id, f);
+			    if (INDEX[id]) {
+			    	// track already uploaded
+			    	console.log("skip", id);
+			    	MSG.textContent = "🆗 " + INDEX[id].Path;
+			    	continue;
+			    }
+			    f.filename = path.concat(f.name).join("/");
+			    result.upload.set(id, f);
+			}
+			return result;
+		}	
+
+		async function downloadDir(dir) {
+			resetProgress();
+			var create = true;
+			var overwrite = OPT_OVERWRITE.checked;
+			var wait = [];
+			for (track of LIB) {
+				var path = track.Path.split("/");
+				var name = path.splice(-1);
+				try {
+					var subdir = dir;
+					for (sub of path) {
+						subdir = await subdir.getDirectoryHandle(sub, {create: create});
+					}
+					var file = await subdir.getFileHandle(name, {create: create});
+					wait.push(writeTrack(track, file, overwrite));
+				} catch (ex) {
+					console.log(ex);
+				}
+			}
+			Promise.all(wait).then(function() {
+				ICON.textContent += "👍"
+				MSG.textContent = '{{tr "sync_done"}}'
+				BTN.disabled = false;
+			})
+		}
+
+		var _progress = 0;
+		var _max = 0;
+		async function writeTrack(meta, fh, overwrite) {
+			incMax();
+			try {
+				var file = await fh.getFile();
+				if (file.size == meta.Size && (meta.LastMod == 0 || file.lastModified >= meta.LastMod)) {
+					return false;
+				}
+				if (!overwrite && file.size != 0 && file.lastModified != meta.LastMod) {
+					return false;
+				}
+				// console.log(file, "VS", meta);
+				var w = await fh.createWritable();
+				var resp = await fetch(meta.URL);
+				await resp.body.pipeTo(w);
+				// var blob = await fetch(meta.URL).then(resp => resp.blob());
+				// await w.write(blob);
+			} catch(ex) {
+				console.log("failed", ex, meta, fh);
+			} finally {
+				// if (w) {
+				// 	await w.close();
+				// }
+				MSG.textContent = "🆗 " + meta.Path;
+				incProgress();
+			}
+		}
+
+		function resetProgress() {
+			_progress = 0;
+			_max = 0;
+			PROGRESS.value = 0;
+			PROGRESS.max = 0;
+			ICON.textContent = "";
+			MSG.textContent = "";
+		}
+		function incProgress() {
+			_progress++;
+			PROGRESS.value = _progress;
+		}
+		function incMax(delta) {
+			if (!delta) { delta = 1; }
+			_max++;
+			PROGRESS.max = _max;
+		}
+		function incFail() {
+			ICON.textContent += "❌"
+		}
+
+		if (!window.showDirectoryPicker) {
+			document.getElementById("sorry").style.display = "block";
+		}
+
+		function isAudioFile(file) {
+			return file.type == "audio/mpeg" || file.type == "audio/mp3" || file.type == "audio/flac" || file.type == "audio/x-flac" ||
+				file.type == "audio/mp4" || file.type == "audio/m4a" || file.type == "audio/x-m4a" ||
+				file.name.endsWith(".mp3") || file.name.endsWith(".flac") || file.name.endsWith(".m4a");
+		}
+
+		function buf2hex(buffer) { // buffer is an ArrayBuffer
+  			return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+		}
+
+		</script>
+	</body>
+</html>

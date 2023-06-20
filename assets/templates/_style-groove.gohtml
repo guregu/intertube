@@ -1,0 +1,25 @@
+:root {
+	--bg: #282828;
+	--fg: #bdae93;
+	--hi-bg: #322f3da3;
+	--hi-fg: #ebdbb2;
+	--input-bg: #3c3836;
+	--button-bg: #504945;
+	--links: #83a598;
+	--nav-bg: #1c1a1a;
+	--nav-border: #423e3e;
+	--border: black;
+	--frost-bg: #1d1b1bb3;
+	--frost-fallback: #1d1b1bf7;
+	--logo: darkgrey;
+	--audio-bg: rgba(140, 140, 140, 0.8);
+}
+/* TODO: move this outside if we style lightmode input */
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="file"], textarea, select, select:focus {
+	background-color: var(--input-bg);
+	color: var(--hi-fg);
+}
+input[type="submit"], button {
+	background-color: var(--button-bg);
+	color: var(--hi-fg);
+}

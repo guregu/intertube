@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "login_title"}}</title>
+		<style>
+		#spiel, p {
+			max-width: 80%;
+		}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "login_title"}}</h2>
+			<form action="/login" method="POST">
+				{{with $.Jump}}
+					<input type="hidden" name="jump" value="{{.}}">
+				{{end}}
+				<table class="form-table">
+					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" placeholder="me@example.com" autocomplete="email"></td></tr>
+					<tr><td><label for="password">{{tr "password"}}:</label></td><td><input type="password" id="password" name="password" autocomplete="current-password"></td></tr>
+					<tr><td></td><td><input type="submit" value='{{tr "login"}}'></td></tr>
+				</table>
+			</form>
+
+			<h3>{{tr "login_forgot"}}</h3>
+			<p>
+				・<a href="/forgot">{{tr "login_toforgot"}}</a>
+			</p>
+
+			<h3>{{tr "login_needreg"}}</h3>
+			<p>
+				・<a href="/register">{{tr "login_toreg"}}</a>
+			</p>
+
+			<h3>{{tr "intro_what"}}</h3>
+			<p>{{tr "intro_explain"}}</p>
+
+			<h3>{{tr "intro_why"}}</h3>
+			<ul id="spiel">
+				<li>{{tr "intro_1"}}</li>
+				<li>{{tr "intro_2"}}</li>
+				<li>{{tr "intro_3"}}</li>
+				<li>{{tr "intro_4"}}</li>
+				<li><a href="/subsonic">{{tr "intro_4-1"}}</a></li>
+				<li>{{tr "intro_4-2"}}</li>
+				<li>{{tr "intro_5"}}</li>
+				<li>{{tr "intro_6"}}</li>
+				<li>{{tr "intro_7"}}</li>
+			</ul>
+
+			<h3>{{tr "intro_howmuch"}}</h3>
+			<p><span class="__finger">☛</span> <a href="/buy/">{{tr "intro_pricing"}}</a></p>
+		</main>
+		{{render "_foot" $}}
+	</body>
+</html>

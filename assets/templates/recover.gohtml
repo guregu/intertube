@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "recover_title"}}</title>
+	</head>
+	<body>
+		<main>
+			<h2>{{tr "recover_title"}}</h2>
+			<p>{{tr "recover_intro"}}</p>
+			<p class="error-msg">{{$.ErrorMsg}}</p>
+			<form action="/recover" method="POST">
+				<input type="hidden" name="userid" value="{{$.UserID}}">
+				<input type="hidden" name="token" value="{{$.Token}}">
+				<table class="form-table">
+					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" autocomplete="email" value="{{$.Email}}" disabled></td></tr>
+					<tr><td><label for="password">{{tr "newpassword"}}:</label></td><td><input type="password" autocomplete="new-password" id="password" name="password" required></td></tr>
+					<tr><td><label for="password-confirm">{{tr "newpasswordconfirm"}}:</label></td><td><input type="password" autocomplete="new-password" id="password-confirm" name="password-confirm" required></td></tr>
+					<tr><td></td><td><input type="submit" value='{{tr "recover_send"}}'></td></tr>
+				</table>
+			</form>
+		</main>
+	</body>
+</html>

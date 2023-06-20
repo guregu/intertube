@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "subsonic_title"}}</title>
+		<style>
+			p {
+				padding-left: 1em;
+			}
+			#help:target {
+				background: var(--hi-bg);
+			}
+            h3, img {
+                margin-left: 1em;
+                margin-top: 1em;
+            }
+            table caption {
+                font-weight: bold;
+            }
+            table {
+                width: 100%;
+                table-layout: fixed;
+                max-width: 32em;
+            }
+            table, td {
+                border: 1px solid var(--fg, black);
+                overflow: wrap;
+                overflow-wrap: break-word;
+            }
+            td {
+                padding: 1ch;
+            }
+            table td:nth-child(1) {
+                text-decoration: underline;
+            }
+            table td:nth-child(2) {
+                /*background: var(--hi-bg);*/
+            }
+            img {
+                 max-width: calc(100% - 2em);
+                 max-height:100vh;
+            }
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "subsonic_title"}}</h3>
+
+            <p>{{tr "subsonic_intro"}}</p>
+
+            <ol>
+                 <li>
+                    <a href="#basic" class="navlink">{{tr "subsonic_basic"}}</a>
+                    <ol>
+                        <li><a href="#auth" class="navlink">{{tr "subsonic_auth"}}</a></li>
+                        <li><a href="#support" class="navlink">{{tr "subsonic_support"}}</a></li>
+                    </ol>
+                 </li>
+                <li>
+                    <a href="#ios" class="navlink">iOS</a>
+                    <ol>
+                        <li><a href="#playsub" class="navlink">play:Sub</a></li>
+                    </ol>
+                </li>
+                <li>
+                    <a href="#android" class="navlink">Android</a>
+                    <ol>
+                        <li><a href="#subtracks" class="navlink">Subtracks</a></li>
+                    </ol>
+                </li>
+                <li>
+                    <a href="#other" class="navlink">Others</a>
+                </li>
+            </ol>
+
+            <h2 id="basic">basic settings</h2>
+            <!-- <p>{{tr "subsonic_basic"}}</p> -->
+            <section>
+                <table>
+                    <caption>{{tr "subsonic_settings"}}</caption>
+                    <tr>
+                        <td>{{tr "serveraddr"}}</td>
+                        <td><code>https://inter.tube</code></td>
+                    </tr>
+                    <tr>
+                        <td>{{tr "username"}}</td>
+                        <td>
+                            {{with $.User.Email}}
+                                <code>{{.}}</code>
+                            {{else}}
+                                (your e-mail address)
+                            {{end}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{{tr "password"}}</td>
+                        <td>
+                            (your inter.tube password)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{{tr "subsonic_authsetting"}}</td>
+                        <td>
+                            legacy mode, "force plain-text password", etc.<br>
+                            <small>(only required/exists for certain apps, see below)</small>
+                        </td>
+                    </tr>
+                </table>
+
+                <h3 id="auth">{{tr "subsonic_auth"}}</h3>
+                <p>・ inter.tube uses the "old style" of authentication that includes your password as a parameter in the URL.
+                <br>・ the "new style" which sends a hash of your password and a salt is not supported because it would require us to store your password in plain text to authenticate you!
+                <br>・ inter.tube securely hashses your password, so we require the old auth method.
+                <br>・ it is mandatory to use HTTPS with inter.tube, this requirement keeps your password safe (apps that do not support HTTPS will not work)
+                </p>
+
+                <h3 id="support">{{tr "subsonic_support"}}</h3>
+                <p>
+                    <ul>
+                        <li>👍 basic stuff</li>
+                        <li>👍 album art</li>
+                        <li>👍 search</li>
+                        <li>👍 sorting by recent, new, etc</li>
+                        <li>👍 starring (favoriting)</li>
+                        <li>👍 proper pagination</li>
+                        <li>👍 playlists</li>
+                        <li>❌ bookmarks (TODO)</li>
+                        <li>❌ chat</li>
+                        <li>❌ podcasts (let me know if you want it)</li>
+                        <li>❌ similar artists (maybe?)</li>
+                        <li>❌ lyrics</li>
+                        <li>❌ last.fm integration (coming soon?)</li>
+                    </ul>
+                </p>
+            </section>
+
+            <h2 id="ios">iOS</h2>
+
+            <h3 id="playsub">play:Sub</h3>
+            <p>support status: <b>excellent</b></p>
+            <p>download: <a href="https://apps.apple.com/us/app/play-sub-music-streamer/id955329386" target="_blank" class="navlink">app store link</a> ($$$)</p>
+            <p>
+                <ol>
+                    <li>Tap the "play:Sub" menu icon on the bottom right.</li>
+                    <li>Tap the name of the server in the first menu item</li>
+                    <li>Tap "Selected server"</li>
+                    <li>Tap "Add server"</li>
+                    <li>Fill in the server address, server name, username, password as below</li>
+                </ol>
+                <img src="https://lore.capital/f/img/lue/bt2Qx1-KZicJCo-ubuxHlPediJGtwSLKfEOD-g.png">
+            </p>
+
+            <br>
+
+            <h2 id="android">Android</h2>
+
+            <h3 id="subtracks">Subtracks</h3>
+            <p>support status: <b>excellent?</b> (need more testing)</p>
+            <p>download: <a href="https://play.google.com/store/apps/details?id=com.subtracks&hl=en&gl=US&pli=1" target="_blank" class="navlink">play store link</a></p>
+            <p>
+                <ol>
+                    <li>Tap the Settings icon on the bottom right</li>
+                    <li>Tap Add server</li>
+                    <li>Fill in the server address, username, password as below</li>
+                    <li>Enable "force plain text password"</li>
+                </ol>
+                <img src="https://lore.capital/f/img/lue/JFobRWLbPFxuO7-tpVrqUs7FV5DZLEo64sONng.png">
+            </p>
+
+            <h2 id="other">Others</h2>
+
+            <p>many more apps are supported, tutorials coming soon(tm)</p>
+		</main>
+	</body>
+</html>

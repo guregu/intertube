@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "buy_title"}}</title>
+		<script src="https://js.stripe.com/v3/"></script>
+	</head>
+	<style>
+		p.trial {
+			font-weight: bold;
+		}
+
+		table {
+			width: 100%;
+			max-width: 600px;
+			border-spacing: 0;
+			/*margin: auto;*/
+		}
+
+		table tr {
+			width: 100%;
+			/*text-align: center;*/
+		}
+
+		table tr.name {
+			/*font-size: larger;*/
+		}
+		table tr.name th {
+			/*border-bottom: 1px solid var(--BorderColor);*/
+		}
+
+		table tr.quota {
+			font-size: larger;
+			font-weight: bold;
+		}
+
+		table td, table th {
+			padding: 0.5em;
+			text-align: center;
+			width: 30%;
+		}
+
+		table tr > * {
+			border-left: 1px solid var(--nav-border);
+			border-right: 1px solid var(--nav-border);
+		}
+		table tr > :first-child {
+			border-left: none;
+			border-right: none;
+		}
+		table tr > :last-child {
+			border-left: none;
+			border-right: none;
+		}
+
+		table .buy button {
+			width: 100%;
+			max-width: 6em;
+		}
+
+		summary {
+			cursor: pointer;
+			font-weight: bold;
+		}
+		details > p {
+			padding-left: 0.5em;
+		}
+
+		{{if (not loggedin)}}
+		table .buy button {
+			display: none !important;
+		}
+		{{end}}
+	</style>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "buy_title"}}</h2>
+			<p>{{tr "buy_intro"}}</p>
+			<p class="trial">※ 
+				{{if loggedin}}
+					{{if $.User.TrialOver}}
+						{{if $.User.Active}}
+							{{if (and $.User.Grandfathered $.User.Expired)}}
+								{{tr "buy_grandfathered"}}
+							{{else}}
+								{{tr "buy_subbed" (tr $.User.Plan.Msg)}} 
+								{{if $.User.Canceled}}
+									({{tr "canceled"}})
+								{{end}}
+							{{end}}
+						{{else}}
+							{{tr "buy_subexpired"}}
+						{{end}}
+					{{else}}
+						{{if $.User.Expired}}
+							{{tr "buy_trialexpired"}}
+						{{else}}
+							{{tr "buy_trialnow" ($.User.TimeRemaining | days)}}
+						{{end}}
+					{{end}}
+				{{else}}
+					{{tr "buy_trial"}}
+				{{end}}
+			</p>
+			<br>
+			<table>
+				<tr class="name">
+					{{range $.Plans}}
+						<th>
+							{{tr .Kind.Msg}}
+						</th>
+					{{end}}
+				</tr>
+				<tr class="quota">
+					{{range $.Plans}}
+						<td>
+							{{.Quota | bytesize}}
+						</td>
+					{{end}}
+				</tr>
+				<tr class="price">
+					{{range $.Plans}}
+						{{$price := index $.Prices .Kind}}
+						<td>
+							{{currency $price.UnitAmount $price.Currency}}<br>
+							<small>{{tr "buy_monthly"}}</small>
+						</td>
+					{{end}}
+				</tr>
+				<tr class="buy">
+					{{range $.Plans}}
+						{{$price := index $.Prices .Kind}}
+						<td>
+							<button onclick="return checkout(this),false;" data-price="{{$price.ID}}">{{tr "buy_subscribe"}}</button>
+						</td>
+					{{end}}
+				</tr>
+			</table>
+			<br>
+			<p>{{tr "buy_explain"}}</p>
+			{{if (not loggedin)}}
+				<br>
+				<h3>{{tr "buy_pitch"}}</h3>
+				<!-- TODO: i18n -->
+				<p><span class="finger">💁</span> <a href="/register">{{tr "nav_register"}}</a> or <a href="/login">{{tr "nav_login"}}</a> to get started. free 14 day trial. no credit card required.</p>
+				<br>
+			{{end}}
+			<div>
+				<h3>q&a</h3>
+				<details>
+					<summary>what is this?</summary>
+					<p>inter.tube is a "online music locker". you can upload music to our "cloud" for safekeeping and listen to your library from many devices. we provide storage space and an easy way to listen to music from your browser.</p>
+				</details>
+				<details>
+					<summary>is there a free trial?</summary>
+					<p>yes, when you register an account you automatically get a free 14 day trial. if you like the service, you can subscribe.</p>
+				</details>
+				<details>
+					<summary>what formats does it support?</summary>
+					<p>currently supports: {{tr "supportedformats"}}. if you have the need for other formats, let me know and i'll see what i can do. video isn't supported yet, but might add it later.</p>
+				</details>
+				<details>
+					<summary>is this safe? what about my privacy?</summary>
+					<p>yes. we use Stripe to securely handle payments, so your credit card is never stored on the site. also, we actually care about your privacy. unlike every other service, we don't track your usage and sell your data to advertisers. in fact, we don't even use unnecessary 3rd party cookies or analytics services.</p>
+				</details>
+				<details>
+					<summary>can i upgrade or downgrade my plan after i subscribe?</summary>
+					<p>yes, you can upgrade or downgrade from your settings page. upgrades are prorated. for example, if you upgrade from the $5 plan to the $20 plan, you only need to pay the difference of $15 that month.</p>
+				</details>
+				<details>
+					<summary>what happens to my files i cancel my subscription or miss a payment?</summary>
+					<p>even if you miss a payment or cancel your subscription, we will keep your files safe for as long as possible: at least a few months but likely much longer. you'll get an e-mail warning before anything gets deleted.</p>
+				</details>
+				<details>
+					<summary>do you re-encode files or lower bitrates?</summary>
+					<p>no. we don't touch your files at all. you can upload and enjoy lossless FLAC and high bitrate mp3s with no worries. when you download a file, you'll get exactly the same data as when you uploaded it.</p>
+				</details>
+				<details>
+					<summary>does this come with music like Spotify?</summary>
+					<p>no. this is a "bring your own music" service. however, if you're an artist and would like to share your tunes with the inter.tube community, i would be happy to accommodate.</p>
+				</details>
+			</div>
+		</main>
+		{{render "_foot" $}}
+	</body>
+	<script>
+		var stripe = Stripe("{{$.StripeKey}}");
+
+		function checkout(elem) {
+			{{if (not loggedin)}}
+				alert('{{tr "pleaselogin"}}');
+				return;
+			{{end}}
+
+			{{if $.HasSub}}
+				window.location = "/settings/payment";
+				return;
+			{{end}}
+
+			var priceID = elem.dataset.price;
+			var data = new FormData();
+			data.append("price", priceID);
+
+			fetch("/buy/checkout", {
+				method: "POST",
+				body: data
+			}).then(function(result) {
+				result.json().then(function(resp) {
+					stripe.redirectToCheckout({
+						sessionId: resp.SessionID
+					}).then(function() {
+						console.log("done", arguments);
+					});
+				});
+			});
+		}
+	</script>
+</html>

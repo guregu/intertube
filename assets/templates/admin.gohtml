@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}admin</title>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>usage</h2>
+			<table>
+				{{range $.Users}}
+				<tr>
+					<td>{{.ID}}</td>
+					<td>{{.Email}}</td>
+					<td>{{.Usage | bytesize}}</td>
+					<td>{{.Plan}}</td>
+					<td>{{.PlanStatus}}</td>
+					<td>{{.Regdate | timestamp}}</td>
+					<td>{{.LastMod | timestamp}}</td>
+				</tr>
+				{{end}}
+			</table>
+		</main>
+	</body>
+</html>

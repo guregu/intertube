@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "settings_title"}}</title>
+		<style>
+			table {
+				min-width: 30%;
+			}
+			td.check {
+				display: inline-flex;
+				text-align: justify;
+			}
+			input[type="text"], input[type="email"] {
+				width: 100%;
+			}
+			table input[type="submit"] {
+				margin-top: 0.5em;
+			}
+			ul.actions {
+				/*list-style: none;*/
+			}
+
+			th {
+				font-size: larger;
+				text-align: left;
+				padding-top: 1em;
+			}
+
+			meter {
+				width: 10em;
+				max-width: 100%;
+				/*width: min(10em, 100%);*/
+			}
+
+			ul.actions li {
+				padding-bottom: 0.5em;
+			}
+
+		/*	@media (hover: none) {
+				tr td:first-child {
+					width: 7em;
+				}
+			}*/
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "settings_title"}}</h2>
+			<p>{{tr "settings_intro"}}</p>
+			<p class="error-msg">{{$.ErrorMsg}}</p>
+			<form action="/settings" method="POST">
+				{{$opt := $.User.Display}}
+				<table>
+					<tbody class="header">
+						<tr id="sub"><th colspan="2">{{tr "settings_subscription"}}</th></tr>
+					</tbody>
+					{{if $.User.Trialing}}
+					<tbody class="trialing">
+						<tr>
+							<td colspan="2" id="trial-explain">
+								<b>{{tr "settings_trialexplain"}}</b><br>
+								☛ <a href="/buy/" class="navlink">{{tr "settings_buylink"}}</a> 💸
+							</td>
+						</tr>
+						<tr>
+							<td>{{tr "settings_trialexpires"}}:</td>
+							<td>
+							{{if $.User.PlanExpire.IsZero}}
+								{{tr "settings_grandfathered"}}
+							{{else}}
+								{{if $.User.Expired}}⚠️ <b>{{tr "expired"}}</b> {{end}} 
+								{{$.User.PlanExpire | timestamp}}
+							{{end}}
+							</td>
+						</tr>
+					</tbody>
+					{{else}}
+					<tbody class="planned">
+						{{if $.HasSub}}
+						<tr>
+							<td><label for="plan">{{tr "plan"}}</label>:</td>
+							<td>{{tr $.User.Plan.Msg}} (<a class="navlink" href="/settings/payment">{{tr "settings_update"}}</a>)</td>
+						</tr>
+						{{end}}
+						<tr>
+						{{if (not $.HasSub)}}
+							<tr>
+								<td colspan="2" id="trial-explain">
+									<b>{{tr "settings_expired"}}</b><br>
+									☛ <a href="/buy/" class="navlink">{{tr "settings_buylink"}}</a> 💸
+								</td>
+							</tr>
+						{{else if $.User.Canceled}}
+							<td>{{tr "settings_standing"}}:</td>
+							<td>⚠️ {{tr "canceled"}} (<a class="navlink" href="/settings/payment">{{tr "settings_renew"}}</a>)</td>
+						{{else}}
+							<td>{{tr "settings_standing"}}:</td>
+							<td>{{$.User.PlanStatus}} (<a class="navlink" href="/settings/payment">{{if (eq $.User.PlanStatus "active")}}{{tr "settings_cancel"}}{{else}}{{tr "settings_renew"}}{{end}}</a>)</td>
+						{{end}}
+						</tr>
+						<tr>
+							<td>
+							{{if $.User.Canceled}}
+								{{tr "settings_expires"}}:
+							{{else}}
+								{{tr "settings_nextdue"}}:
+							{{end}}
+							</td>
+							<td>
+								{{if $.User.Expired}}⏰{{end}} 
+								{{$.User.PlanExpire | date}}
+							</td>
+						</tr>
+					</tbody>
+					{{end}}
+					<tbody>
+						{{$quota := $.User.CalcQuota}}
+						{{if $.User.StorageFull}}
+						<tr>
+							<td>{{tr "settings_usage"}}:</td>
+							<td class="error-msg">
+								⚠️ {{$.User.Usage | bytesize}} / {{$quota | bytesize}} ({{$.User.UsageDesc}}%)<br>
+								{{render "_quota" $}}
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" class="error-msg">{{tr "settings_storagefull"}}</td>
+						</tr>
+						{{else}}
+						<tr>
+							<td>{{tr "settings_usage"}}:</td>
+							<td>
+								{{$.User.Usage | bytesize}} / {{$quota | bytesize}} ({{$.User.UsageDesc}}%)<br>
+								{{render "_quota" $}}
+							</td>
+						</tr>
+						{{end}}
+					</tbody>
+
+					<tbody class="header">
+						<tr><th colspan="2">{{tr "settings_library"}}</th></tr>
+					</tbody>
+					<tbody>
+						<tr>
+							<td><label>{{tr "librarycache"}}</label>:</td>
+							<td>
+								{{$.User.LastDump | timestamp}} 
+								<input form="reset-cache" type="submit" value='{{tr "resetcache" }}'>
+							</td>
+						</tr>
+					</tbody>
+
+					<tbody class="header">
+						<tr><th colspan="2">{{tr "settings_account"}}</th></tr>
+					</tbody>
+					<tbody>
+						<tr>
+							<td><label for="email">{{tr "email"}}</label>:</td>
+							<td><input type="email" id="email" name="email" value="{{$.User.Email}}"></td>
+						</tr>
+						<tr>
+							<td><label>{{tr "password"}}</label>:</td>
+							<td><a href="/settings/password" class="navlink">{{tr "settings_changepass"}}</a></td>
+						</tr>
+						<!-- <tr>
+							<td></td>
+							<td><input type="submit" value='{{tr "update"}}'></td>
+						</tr> -->
+					</tbody>
+
+					<tbody class="header">
+						<tr><th colspan="2">{{tr "settings_display"}}</th></tr>
+					</tbody>
+					<tbody>
+						<tr>
+							<td><label for="theme">{{tr "theme"}}</label>:</td>
+							<td>
+								<select id="theme" name="theme">
+									<option value="" {{if (eq $.User.Theme "")}} selected {{end}}>automatic</option>
+									<option value="plain" {{if (eq $.User.Theme "plain")}} selected {{end}}>the default</option>
+									<option value="groove" {{if (eq $.User.Theme "groove")}} selected {{end}}>gruvboxy (dark)</option>
+									<option value="spooky" {{if (eq $.User.Theme "spooky")}} selected {{end}}>spooky</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td><label for="display-stretch">{{tr "settings_stretch"}}</label>:</td>
+							<td class="check"><input type="checkbox" id="display-stretch" name="display-stretch" {{if $opt.Stretch}} checked {{end}}><label for="display-stretch">{{tr "display_stretch"}}</label></td>
+						</tr>
+						<tr>
+							<td><label for="musiclink">{{tr "settings_musiclink"}}</label>:</td>
+							<td>
+								<select id="musiclink" name="musiclink">
+									<option value="" {{if (eq $opt.MusicLink "")}} selected {{end}}>{{tr "settings_trackview"}}</option>
+									<option value="albums" {{if (eq $opt.MusicLink "albums")}} selected {{end}}>{{tr "settings_albumview"}}</option>
+								</select>
+							</td>
+						</tr>
+<!-- 						<tr>
+							<td><label for="trackselect">{{tr "settings_trackselect"}}</label>:</td>
+							<td>
+								<select id="trackselect" name="trackselect">
+									<option value="" {{if (eq $opt.TrackSelect "")}} selected {{end}}>{{tr "settings_trackseldefault"}}</option>
+									<option value="click" {{if (eq $opt.TrackSelect "click")}} selected {{end}}>{{tr "settings_trackselclick"}}</option>
+									<option value="ctrl" {{if (eq $opt.TrackSelect "ctrl")}} selected {{end}}>{{tr "settings_trackselctrl"}}</option>
+								</select>
+							</td>
+						</tr> -->
+
+						<tr>
+							<td></td>
+							<td><input type="submit" value='{{tr "update"}}'></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<form id="reset-cache" action="/cache/reset" method="POST"></form>
+			<h3>{{tr "settings_actions"}}</h3>
+			<ul class="actions">
+				<li>
+					<form action="/settings/payment" method="GET"><input type="submit" value='🤑 {{tr "settings_payment"}}'></form>
+					
+				</li>
+				<li>
+					<form action="/logout" method="POST"><input type="submit" value='👋 {{tr "logout"}}'></form>
+				</li>
+			</ul>
+		</main>
+	</body>
+</html>

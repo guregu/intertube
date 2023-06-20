@@ -1,0 +1,17 @@
+<span class="track-name">
+	{{with .Info.Artist}}
+		<span class="track-artist">{{.}}</span>
+	{{else}}
+		<span class="track-artist unknown">{{tr "unknownartist"}}</span>
+	{{end}} - 
+	{{with .Info.Album}}
+		<span class="track-album">{{.}}</span>
+	{{else}}
+		<span class="track-album unknown">{{tr "unknownalbum"}}</span>
+	{{end}} - 
+	{{with (or .Info.Title .Filename)}}
+		<span class="track-title">{{.}}</span>
+	{{- else -}}
+		<span class="track-title unknown">{{tr "unknownartist"}}</span>
+	{{- end -}}
+</span>

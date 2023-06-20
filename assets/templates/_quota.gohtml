@@ -1,0 +1,2 @@
+{{$quota := $.User.CalcQuota}}
+<meter value="{{$.User.Usage}}" max="{{$quota}}" low="{{pctof $quota .40}}" optimum="{{pctof $quota .30}}" high="{{pctof $quota .70}}">{{$.User.UsageDesc}}%</meter>

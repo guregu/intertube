@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "checkout_title"}}</title>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "checkout_thanks"}}</h2>
+			<p>{{tr "checkout_explain"}}</p>
+			<table>
+				<tr><td>{{tr "plan"}}</td><td>{{tr $.User.Plan.Msg}}</td></tr>
+				<tr><td>{{tr "expires"}}</td><td>{{$.User.PlanExpire | date}}</td></tr>
+			</table>
+			<p><a href="/settings">{{tr "checkout_settings"}}</a></p>
+		</main>
+	</body>
+</html>

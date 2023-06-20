@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "edit_title"}}</title>
+		<style>
+			input[type='number'][name='year'] {
+				width: 5em;
+			}
+			input[type='number'] {
+				width: 3em;
+			}
+			input[type='text'] {
+				width: 100%;
+			}
+			tr td:first-child {
+				width: 7em;
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "edit_title"}}</h2>
+			{{if $.Multi}}
+				<p>🛈 {{tr "edit_multiinfo"}}</p>
+			{{end}}
+			<p class="error-msg">{{$.ErrorMsg}}</p>
+			<form action="/track/{{$.IDs}}/edit" method="POST" enctype="multipart/form-data">
+				<input type="hidden" name="id" value="{{$.Track.ID}}">
+				<table>
+					<tbody>
+						<tr>
+							<td>{{tr "title"}}</td>
+							<td>
+								{{if $.Multi}}
+									<ul>
+									{{range $.Tracks}}
+										<li>{{.Info.Title}}</li>
+									{{end}}
+									</ul>
+								{{else}}
+									<input type="text" name="title" value="{{$.Track.Info.Title}}">
+								{{end}}
+							</td>
+						</tr>
+						<tr>
+							<td>{{tr "artist"}}</td>
+							<td><input type="text" name="artist" value="{{$.Track.Info.Artist}}" list="all-artists"></td>
+						</tr>
+						<tr>
+							<td>{{tr "album"}}</td>
+							<td><input type="text" name="album" value="{{$.Track.Info.Album}}" list="all-albums"></td>
+						</tr>
+						<tr>
+							<td>{{tr "albumartist"}}</td>
+							<td><input type="text" name="albumartist" value="{{$.Track.Info.AlbumArtist}}" list="all-albumartists"></td>
+						</tr>
+						<tr>
+							<td>{{tr "composer"}}</td>
+							<td><input type="text" name="composer" value="{{$.Track.Info.Composer}}"></td>
+						</tr>
+						<tr>
+							<td>{{tr "cover"}}</td>
+							<td>
+								{{if $.Track.Picture.ID}}
+									<img class="album-cover" alt="{{$.Track.Picture.Desc}}" src="{{$.Track.Picture.S3Key | cdn}}">
+								{{else}}
+									{{tr "none"}}
+								{{end}}
+								<br>
+								<label for="pic">{{tr "edit_changepic"}}:</label> <input type="file" id="pic" name="pic" accept="image/*">
+								<br>
+								<label for="picdel">{{tr "edit_deletepic"}}:</label> <input type="checkbox" id="picdel" name="picdel">
+							</td>
+						</tr>
+						<tr>
+							<td>{{tr "year"}}</td>
+							<td><input type="number" name="year" value="{{$.Track.Year | blankzero}}"></td>
+						</tr>
+						{{if (not $.Multi)}}
+						<tr>
+							<td>{{tr "track"}}</td>
+							<td><input type="number" name="number" value="{{$.Track.Number | blankzero}}" {{if $.Multi}} disabled {{end}}> of <input type="number" name="total" value="{{$.Track.Total | blankzero}}" {{if $.Multi}} disabled {{end}}></td>
+						</tr>
+						{{end}}
+						<tr>
+							<td>{{tr "disc"}}</td>
+							<td><input type="number" name="disc" value="{{$.Track.Disc | blankzero}}"> of <input type="number" name="discs" value="{{$.Track.Discs | blankzero}}"></td>
+						</tr>
+						<tr>
+							<td>{{tr "tags"}} {{tr "edit_spacesep"}}</td>
+							<td><input type="text" name="tags" value="{{$.Track.Tags | bespace}}"></td>
+						</tr>
+						<tr>
+							<td>{{tr "comment"}}</td>
+							<td><input type="text" name="comment" value="{{$.Track.Info.Comment}}"></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><input type="submit" value='{{tr "edit"}}'></td>
+						</tr>
+					</tbody>
+				</table>
+				<datalist id="all-artists"></datalist>
+				<datalist id="all-albums"></datalist>
+				<datalist id="all-albumartists"></datalist>
+			</form>
+		</main>
+		<script>
+			function getCache(href, otherwise) {
+				return window.caches.match(href).then(function(resp) {
+					if (!resp) {
+						if (otherwise) { otherwise(); }
+						return;
+					}
+					resp.text().then(function(raw) {
+						var doc = new DOMParser().parseFromString(raw, "text/html");
+						var tracks = doc.querySelectorAll(".track");
+						populate(tracks);
+					});
+				});
+			}
+
+			function populate(tracks) {
+				var artists = new Set();
+				var albums = new Set();
+				var albumartists = new Set();
+
+				for (t of tracks) {
+					if (t.dataset.album) { 
+						albums.add(t.dataset.album);
+					}
+					if (t.dataset.artist) { 
+						artists.add(t.dataset.artist);
+						albumartists.add(t.dataset.artist);
+					}
+					if (t.dataset.albumartist) {
+						artists.add(t.dataset.albumartist);
+						albumartists.add(t.dataset.albumartist);
+					}
+				}
+
+				var allAlbums = document.getElementById("all-albums");
+				var allArtists = document.getElementById("all-artists");
+				var allAlbumArtists = document.getElementById("all-albumartists");
+
+				for (v of albums) {
+					var opt = document.createElement("option");
+					opt.value = v;
+					allAlbums.appendChild(opt);
+				}
+
+				for (v of artists) {
+					var opt = document.createElement("option");
+					opt.value = v;
+					allArtists.appendChild(opt);
+				}
+
+				for (v of albumartists) {
+					var opt = document.createElement("option");
+					opt.value = v;
+					allAlbumArtists.appendChild(opt);
+				}
+
+				console.log("populate", artists, albums, albumartists);
+			}
+
+			getCache("/music", getCache.bind(window, "/music/albums"));
+		</script>
+	</body>
+</html>

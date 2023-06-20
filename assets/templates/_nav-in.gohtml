@@ -1,0 +1,15 @@
+<nav>
+	{{- $musiclink := concat "/music/" opts.MusicLink.String -}}
+	<ul>
+		<li class="head"><a href="/" {{if (eq path "/")}} class="active" {{end}}>inter.tube</a></li>
+		<li><a href="{{$musiclink}}" {{if (eq path $musiclink)}} class="active" {{end}}>{{tr "nav_music"}}</a></li>
+		<li><a href="/upload" {{if (eq path "/upload")}} class="active" {{end}}>{{tr "nav_upload"}}</a></li>
+		<!-- <li><a href="/sync" {{if (eq path "/sync")}} class="active" {{end}}>{{tr "nav_sync"}}</a></li> -->
+		<!-- <li><a href="/subsonic" {{if (eq path "/subsonic")}} class="active" {{end}}>{{tr "nav_subsonic"}}</a></li> -->
+		<li><a href="/more" {{if (eq path "/more")}} class="active" {{end}}>{{tr "nav_more"}}</a></li>
+		<li><a href="/settings" {{if (eq path "/settings")}} class="active" {{end}}>{{tr "nav_settings"}}</a></li>
+	</ul>
+	<div class="shortcut mobile-double">
+		<a href="{{$musiclink}}" title='{{tr "nav_musiclib"}}'>♫</a>
+	</div>
+</nav>

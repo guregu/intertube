@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+	<head>
+		{{render "_head" $}}
+		<title>{{tr "titleprefix"}}{{tr "more_title"}}</title>
+		<style>
+			p {
+				padding-left: 1em;
+			}
+			#help:target {
+				background: var(--hi-bg);
+			}
+		</style>
+	</head>
+	<body>
+		{{render "_nav" $}}
+		<main>
+			<h2>{{tr "more_title"}}</h3>
+
+			<h3>{{tr "more_subsonic"}}</h3>
+			<p>📲 <a href="/subsonic" target="_blank">{{tr "more_subsoniclink"}}</a></p>
+			<p>🆕 recently updated!! (april 2023)</p>
+			<p>{{tr "more_subsonicintro"}}</p>
+
+<!--
+			<h3>{{tr "more_forum"}}</h3>
+			<p>💬 <a href="https://intertube.thread.zone" target="_blank">{{tr "more_forumlink"}}</a></p>
+			<p>{{tr "more_forumintro"}}</p>
+
+
+			<h3>{{tr "more_changelog"}}</h3>
+			<p>🆕 <a href="https://intertube.thread.zone/thread/4/1-50" target="_blank">{{tr "more_changeloglink"}}</a></p>
+			<p>{{tr "more_changelogintro"}}</p>
+-->
+
+			<h3>{{tr "more_sync"}}</h3>
+			<p>🗃️ <a href="https://inter.tube/sync" target="_blank">{{tr "more_synclink"}}</a></p>
+			<p>{{tr "more_syncintro"}}</p>
+			
+			<h3>{{tr "more_desktop"}}</h3>
+			<p>💻 <a href="https://intertube.thread.zone/thread/6/1-50" target="_blank">{{tr "more_desktoplink"}}</a></p>
+			<p>{{tr "more_desktopintro"}}</p>
+
+			<br>
+			<!-- <br> -->
+
+			<h2>{{tr "more_support"}}</h2>
+			<h3 id="help">{{tr "more_help"}}</h3>
+			<p>🆘 <a href="mailto:greg.roseberry@gmail.com">{{tr "more_helplink"}}</a></p>
+			<p>{{tr "more_helpintro"}}</p>
+
+			<br>
+			<!-- <br> -->
+
+			<h2>{{tr "more_legal"}}</h2>
+			<ul>
+				<li><a href="/terms" class="navlink">{{tr "nav_tos"}}</a></li>
+				<li><a href="/privacy" class="navlink">{{tr "nav_privacy"}}</a></li>
+				<li><a href="/terms#tokusho" class="navlink">特定法表記 (Specified Commercial Transaction Act Notice)</a></li>
+			</ul>
+		</main>
+	</body>
+</html>

@@ -19,6 +19,7 @@ import (
 	stripeprice "github.com/stripe/stripe-go/v72/price"
 	"github.com/stripe/stripe-go/v72/product"
 	"github.com/stripe/stripe-go/v72/webhook"
+
 	// "github.com/stripe/stripe-go/v72/client"
 	"github.com/davecgh/go-spew/spew"
 
@@ -311,7 +312,7 @@ func getUserByCustomer(ctx context.Context, c *stripe.Customer) (tube.User, erro
 	if acc, ok := c.Metadata["account"]; ok {
 		uid, err := strconv.Atoi(acc)
 		if err != nil {
-			return tube.User{}, fmt.Errorf("invalid account metadata: %s acc; %w", err)
+			return tube.User{}, fmt.Errorf("invalid account metadata: %s acc; %w", acc, err)
 		}
 		u, err := tube.GetUser(ctx, uid)
 		if err == nil {
@@ -381,7 +382,11 @@ func formatCurrency(amt int64, currency stripe.Currency) string {
 	dec := float64(amt) / 100.0
 	switch currency {
 	case stripe.CurrencyUSD:
-		return fmt.Sprintf("$%g USD", dec)
+		if amt%100 == 0 {
+			return fmt.Sprintf("$%g USD", dec)
+		} else {
+			return fmt.Sprintf("$%.2f USD", dec)
+		}
 	case stripe.CurrencyJPY:
 		return fmt.Sprintf("¥%d", amt)
 	}

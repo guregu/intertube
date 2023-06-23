@@ -434,9 +434,10 @@
 			var table = document.getElementById("upload-tracks");
 			var tmpl = document.getElementById("upload-track");
 			var track = tmpl.content.cloneNode(true);
-			track.querySelector("tr").dataset.filename = filename;
-			track.querySelector("tr").dataset.pseudo = pseudoID;
-			track.querySelector("tr").dataset.status = "uploading";
+			var tr = track.querySelector("tr");
+			tr.dataset.filename = filename;
+			tr.dataset.pseudo = pseudoID;
+			tr.dataset.status = "uploading";
 			track.querySelector(".track-name").textContent = filename;
 			table.appendChild(track);
 			return pseudoID;

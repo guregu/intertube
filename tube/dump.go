@@ -199,13 +199,7 @@ func loadDump(key string) (Dump, error) {
 
 	// TODO: compare timestamp?
 	// TODO: TODO
-	d.encache()
+	// d.encache()
 
 	return d, nil
 }
-
-// func SaveDump(userID int, tracks []Track) error {
-// 	d := Dump{
-
-// 	}
-// }

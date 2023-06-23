@@ -6,3 +6,4 @@ cmd/tubesync/tubesync.exe
 cmd/tubesync/tubesync
 deploydate
 */node_modules
+config.toml

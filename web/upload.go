@@ -157,7 +157,7 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	track.Disc, track.Discs = tags.Disc()
 	track.ApplyInfo(trackInfo)
 
-	err = copyUploadToMain(ctx, track.B2Key(), b2ID, fmeta)
+	err = copyUploadToFiles(ctx, track.B2Key(), b2ID, fmeta)
 	if err != nil {
 		return tube.Track{}, err
 	}

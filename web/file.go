@@ -80,9 +80,13 @@ func signCookie(href string) ([]*http.Cookie, error) {
 }
 
 // intertube.download/auth?token=XYZ&r={home/dl}
-// 		set cookie, redir to inter.tube
+//
+//	set cookie, redir to inter.tube
+//
 // intertube.download/file/...
-//		check cookie
+//
+//	check cookie
+//
 // https://intertube.download/auth?token=B2_TOKEN?dl=USERID/FILENAME
 func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
@@ -165,14 +169,16 @@ func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 
 func refreshB2Token(ctx context.Context, u *tube.User, fudge time.Duration) error {
 	now := time.Now().UTC().Add(-fudge)
-	if u.B2Token == "" || now.After(u.B2Expire) {
-		token, expire, err := createB2Token(ctx, u.ID)
-		if err != nil {
-			return err
-		}
-		if err := u.SetB2Token(ctx, token, expire); err != nil {
-			return err
-		}
+	if u.B2Token != "" && now.Before(u.B2Expire) {
+		return nil
+	}
+
+	token, expire, err := createB2Token(ctx, u.ID)
+	if err != nil {
+		return err
+	}
+	if err := u.SetB2Token(ctx, token, expire); err != nil {
+		return err
 	}
 	return nil
 }

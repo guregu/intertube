@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -22,13 +24,15 @@ var (
 )
 
 var FilesBucket = S3Bucket{
-	S3:   newB2("us-west-002", "https://s3.us-west-002.backblazeb2.com", b2KeyID, b2Key),
+	S3:   newB2("us-west-002", b2KeyID, b2Key),
 	Name: b2BucketName,
+	Type: StorageTypeB2,
 }
 
 var UploadsBucket = S3Bucket{
-	S3:   newB2("us-west-002", "https://s3.us-west-002.backblazeb2.com", b2UploadKeyID, b2UploadKey),
+	S3:   newB2("us-west-002", b2UploadKeyID, b2UploadKey),
 	Name: b2BucketName + "-upload",
+	Type: StorageTypeB2,
 }
 
 // AWS
@@ -45,6 +49,7 @@ var ConfigBucket = S3Bucket{
 type S3Bucket struct {
 	S3   *s3.S3
 	Name string
+	Type StorageType
 }
 
 func (b S3Bucket) Put(contentType, key string, r io.ReadSeeker) error {
@@ -106,8 +111,16 @@ func (b S3Bucket) Copy(dst, src string) error {
 	return err
 }
 
-func (b S3Bucket) CopyFromBucket(dst string, srcBucket S3Bucket, src string) error {
-	_, err := b.S3.CopyObject(&s3.CopyObjectInput{Bucket: &b.Name, CopySource: aws.String(srcBucket.Name + "/" + src), Key: &dst})
+func (b S3Bucket) CopyFromBucket(dst string, srcBucket S3Bucket, src string, mime, contentDisp string) error {
+	copySrc := srcBucket.Name + "/" + src
+	log.Println("copysrc", copySrc)
+	_, err := b.S3.CopyObject(&s3.CopyObjectInput{
+		Bucket:             &b.Name,
+		CopySource:         &copySrc,
+		Key:                &dst,
+		ContentType:        &mime,
+		ContentDisposition: &contentDisp,
+	})
 	return err
 }
 
@@ -146,8 +159,9 @@ func (b S3Bucket) List(prefix string) (map[string]S3Head, error) {
 	return objs, err
 }
 
-func newB2(region, endpoint string, keyID, key string) *s3.S3 {
+func newB2(region string, keyID, key string) *s3.S3 {
 	// println(keyID, key)
+	endpoint := fmt.Sprintf("https://s3.%s.backblazeb2.com", region)
 	return s3.New(session.New(), &aws.Config{
 		Region:      aws.String(region),
 		Endpoint:    aws.String(endpoint),
@@ -156,8 +170,80 @@ func newB2(region, endpoint string, keyID, key string) *s3.S3 {
 	})
 }
 
+func newR2(accountID string, keyID, key string) *s3.S3 {
+	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
+	return s3.New(session.New(), &aws.Config{
+		Region:      aws.String("auto"),
+		Endpoint:    aws.String(endpoint),
+		Credentials: credentials.NewStaticCredentials(keyID, key, ""),
+	})
+}
+
 func newS3(region string) *s3.S3 {
 	return s3.New(session.New(), &aws.Config{
 		Region: aws.String(region),
 	})
+}
+
+var (
+	S3Region   = "us-west-2"
+	S3Endpoint string
+
+	S3AccessKeyID     string
+	S3AccessKeySecret string
+
+	// for R2
+	CFAccountID string
+)
+
+type Config struct {
+	Type StorageType
+
+	FilesBucket   string
+	UploadsBucket string
+
+	Region   string
+	Endpoint string
+
+	AccessKeyID     string
+	AccessKeySecret string
+
+	// for R2
+	CFAccountID string
+}
+
+type StorageType string
+
+const (
+	StorageTypeS3 StorageType = "s3"
+	StorageTypeB2 StorageType = "b2"
+	StorageTypeR2 StorageType = "r2"
+	StorageTypeFS StorageType = "fs"
+)
+
+func Init(cfg Config) {
+	S3AccessKeyID = cfg.AccessKeyID
+	S3AccessKeySecret = cfg.AccessKeySecret
+
+	var client *s3.S3
+	switch cfg.Type {
+	case StorageTypeS3:
+		client = newS3(cfg.Region)
+	case StorageTypeB2:
+		client = newB2(cfg.Region, cfg.AccessKeyID, cfg.AccessKeySecret)
+	case StorageTypeR2:
+		client = newR2(cfg.CFAccountID, cfg.AccessKeyID, cfg.AccessKeySecret)
+	}
+
+	FilesBucket = S3Bucket{
+		Name: cfg.FilesBucket,
+		S3:   client,
+		Type: cfg.Type,
+	}
+
+	UploadsBucket = S3Bucket{
+		Name: cfg.UploadsBucket,
+		S3:   client,
+		Type: cfg.Type,
+	}
 }

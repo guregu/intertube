@@ -23,10 +23,10 @@ const (
 )
 
 type Track struct {
-	UserID int
-	ID     string `badgerhold:"index"`
-	SortID string `badgerhold:"index"`
-	Date   time.Time
+	UserID int       `dynamo:",hash" index:"UserID-SortID-index,hash" index:"UserID-Date-index,hash"`
+	ID     string    `dynamo:",range"`
+	SortID string    `index:"UserID-SortID-index,range" badgerhold:"index"`
+	Date   time.Time `index:"UserID-Date-index,range"`
 
 	// proper case:
 	Info TrackInfo
@@ -71,6 +71,10 @@ type Track struct {
 	// view only
 	Starred time.Time `dynamo:"-"`
 	DL      string    `dynamo:"-" json:",omitempty"`
+}
+
+func (Track) CreateTable(create *dynamo.CreateTable) {
+	create.Stream(dynamo.NewAndOldImagesView)
 }
 
 type TrackInfo struct {
@@ -491,9 +495,11 @@ func (p Picture) S3Key() string {
 }
 
 func (u User) GetTracks(ctx context.Context) (Tracks, error) {
-	if d, err := u.GetDump(); err == nil {
-		log.Println("using dump for", u.ID, "@", d.Time, d.Key())
-		return d.Tracks, nil
+	if useDump {
+		if d, err := u.GetDump(); err == nil {
+			log.Println("using dump for", u.ID, "@", d.Time, d.Key())
+			return d.Tracks, nil
+		}
 	}
 	tracks, _, err := GetTracksPartialSorted(ctx, u.ID, 0, nil)
 	return tracks, err

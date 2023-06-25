@@ -9,8 +9,8 @@ import (
 )
 
 type Playlist struct {
-	UserID int
-	ID     int
+	UserID int `dynamo:",hash"`
+	ID     int `dynamo:",range"`
 
 	Date time.Time
 	Name string

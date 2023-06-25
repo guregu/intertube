@@ -2,49 +2,102 @@ package tube
 
 import (
 	"context"
+	"log"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
-
-	"github.com/timshannon/badgerhold"
+	"golang.org/x/sync/errgroup"
 )
 
-func openDB(name string) (*badgerhold.Store, error) {
-	options := badgerhold.DefaultOptions
-	// options.
-	store, err := badgerhold.Open(options)
-	return store, err
+var dynamoTables = map[string]any{
+	"Counters":  counter{},
+	"Files":     File{},
+	"Playlists": Playlist{},
+	"Sessions":  Session{},
+	"Stars":     Star{},
+	"Tracks":    Track{},
+	"Users":     User{},
 }
-
-const regionDB = "us-west-2"
-
-func init() {
-	dynamo.RetryTimeout = 5 * time.Minute
-}
-
-var db = dynamo.New(session.New(), &aws.Config{
-	Region: aws.String(regionDB),
-	// LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody),
-})
 
 var ErrNotFound = dynamo.ErrNotFound
 
+var (
+	dbPrefix string = "Tube-"
+	db       *dynamo.DB
+	useDump  = false
+)
+
+func Init(region, prefix, endpoint string, debug bool) {
+	dbPrefix = prefix
+	sesh, err := session.NewSession()
+	if err != nil {
+		panic(err)
+	}
+	cfg := &aws.Config{
+		Region: &region,
+	}
+	if endpoint == "" && region == "" {
+		region = os.Getenv("AWS_REGION")
+	}
+	if endpoint != "" {
+		if region == "" {
+			region = "local"
+		}
+		cfg.Endpoint = &endpoint
+	}
+	if debug {
+		cfg.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody)
+	}
+	db = dynamo.New(sesh, cfg)
+}
+
 func dynamoTable(name string) dynamo.Table {
-	return db.Table("Tube-" + name)
+	return db.Table(dbPrefix + name)
+}
+
+type createTabler interface {
+	CreateTable(*dynamo.CreateTable)
+}
+
+func CreateTables(ctx context.Context) error {
+	log.Println("Checking DynamoDB tables... prefix =", dbPrefix)
+
+	grp, ctx := errgroup.WithContext(ctx)
+	for name, model := range dynamoTables {
+		name := dynamoTable(name).Name()
+		model := model
+
+		if _, err := db.Table(name).Describe().RunWithContext(ctx); err == nil {
+			continue
+		}
+
+		log.Println("Creating table:", name)
+		grp.Go(func() error {
+			create := db.CreateTable(name, model).OnDemand(true)
+			if custom, ok := model.(createTabler); ok {
+				custom.CreateTable(create)
+			}
+			return create.RunWithContext(ctx)
+		})
+	}
+	return grp.Wait()
+}
+
+type counter struct {
+	ID    string `dynamo:",hash"`
+	Count int
 }
 
 func NextID(ctx context.Context, class string) (n int, err error) {
-	var counter struct {
-		ID    string
-		Count int
-	}
+	var ct counter
 
 	table := dynamoTable("Counters")
-	err = table.Update("ID", class).Add("Count", 1).Value(&counter)
-	return counter.Count, err
+	err = table.Update("ID", class).Add("Count", 1).Value(&ct)
+	return ct.Count, err
 }
 
 func IsCondCheckErr(err error) bool {
@@ -52,4 +105,8 @@ func IsCondCheckErr(err error) bool {
 		return true
 	}
 	return false
+}
+
+func init() {
+	dynamo.RetryTimeout = 5 * time.Minute
 }

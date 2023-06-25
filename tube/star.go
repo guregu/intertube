@@ -6,8 +6,8 @@ import (
 )
 
 type Star struct {
-	UserID int
-	SSID   SSID
+	UserID int  `dynamo:",hash"`
+	SSID   SSID `dynamo:",range"`
 	Date   time.Time
 }
 

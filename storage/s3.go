@@ -74,6 +74,15 @@ func (b S3Bucket) PresignPut(key string, size int64, disp string) (string, error
 	return url, err
 }
 
+func (b S3Bucket) PresignGet(key string) (string, error) {
+	req, _ := b.S3.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(b.Name),
+		Key:    aws.String(key),
+	})
+	url, err := req.Presign(45 * time.Minute)
+	return url, err
+}
+
 func (b S3Bucket) Delete(key string) error {
 	_, err := b.S3.DeleteObject(&s3.DeleteObjectInput{
 		Key: aws.String(key),

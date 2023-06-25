@@ -34,6 +34,7 @@ const (
 var (
 	stripePublicKey string
 	stripeSigSecret string // for webhook
+	useStripe       bool
 )
 
 func initStripe() {
@@ -43,6 +44,7 @@ func initStripe() {
 		return
 	}
 	stripe.Key = key
+	useStripe = true
 
 	stripePublicKey = os.Getenv("STRIPE_PUBLIC")
 	if stripePublicKey == "" {
@@ -350,6 +352,10 @@ func getCustomer(id string) (*stripe.Customer, error) {
 }
 
 func ensureCustomer(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
+	if !useStripe {
+		return ctx
+	}
+
 	if u, ok := userFrom(ctx); ok {
 		if err := ensureStripeCustomer(ctx, &u); err != nil {
 			panic(err)

@@ -384,8 +384,10 @@
 				uploadTrack(file, meta.pseudoID, true);
 				return;
 			}
+
 			xhr.setRequestHeader("Content-Type", file.type);
 			xhr.setRequestHeader("Content-Disposition", disp);
+
 			xhr.send(file);
 		}
 

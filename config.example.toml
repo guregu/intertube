@@ -1,0 +1,21 @@
+domain = "inter.tube"
+
+[db]
+#region = "us-west-2"
+prefix = "Tube-"
+debug = false
+# for real DynamoDB, comment this out:
+endpoint = "http://localhost:8880"
+region = "local"
+[storage]
+### MinIO
+# TODO
+
+### Cloudflare R2
+type = "r2"
+access_key_id = "xxx"
+access_key_secret = "yyy"
+cloudflare_account = "zzz"
+domain = "example.com"
+uploads_bucket = "intertube-test-uploads"
+files_bucket = "intertube-test"

@@ -9,7 +9,9 @@
 		<main>
 			<h2>{{tr "reg_title"}}</h2>
 			<p>{{tr "reg_intro"}}</p>
+		{{if payment}}
 			<p>※ {{tr "buy_trial"}}. {{tr "reg_nocc"}}</p>
+		{{end}}
 			<p class="error-msg">{{$.ErrorMsg}}</p>
 			<form action="/register" method="POST" onsubmit="return checkForm();">
 				<table class="form-table">

@@ -31,15 +31,14 @@
 			<p>{{tr "more_desktopintro"}}</p>
 
 			<br>
-			<!-- <br> -->
 
+		{{if payment}}
 			<h2>{{tr "more_support"}}</h2>
 			<h3 id="help">{{tr "more_help"}}</h3>
 			<p>🆘 <a href="mailto:greg.roseberry@gmail.com">{{tr "more_helplink"}}</a></p>
 			<p>{{tr "more_helpintro"}}</p>
 
 			<br>
-			<!-- <br> -->
 
 			<h2>{{tr "more_legal"}}</h2>
 			<ul>
@@ -47,6 +46,7 @@
 				<li><a href="/privacy" class="navlink">{{tr "nav_privacy"}}</a></li>
 				<li><a href="/terms#tokusho" class="navlink">特定法表記 (Specified Commercial Transaction Act Notice)</a></li>
 			</ul>
+		{{end}}
 		</main>
 	</body>
 </html>

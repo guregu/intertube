@@ -1,3 +1,7 @@
 <footer id="foot">
+{{if payment}}
 	<a href="/terms" class="navlink">{{tr "nav_tos"}}</a>・<a href="/privacy" class="navlink">{{tr "nav_privacy"}}</a><span class="desktop-only">・</span><br class="mobile-only"><a href="/terms#tokusho" class="navlink">特定法表記</a>
+{{else}}
+	powered by <a href="https://github.com/guregu/intertube" target="_blank">intertube</a>&nbsp;
+{{end}}
 </footer>

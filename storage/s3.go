@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,37 +12,10 @@ import (
 )
 
 var (
-	b2KeyID       = os.Getenv("B2_KEY_ID")
-	b2Key         = os.Getenv("B2_KEY")
-	b2UploadKeyID = b2KeyID
-	b2UploadKey   = b2Key
-	// b2UploadKeyID = os.Getenv("B2_UPLOAD_KEY_ID")
-	// b2UploadKey   = os.Getenv("B2_UPLOAD_KEY")
-	b2BucketName = "intertube"
+	FilesBucket   S3Bucket
+	UploadsBucket S3Bucket
+	CacheBucket   S3Bucket
 )
-
-var FilesBucket = S3Bucket{
-	S3:   newB2("us-west-002", b2KeyID, b2Key),
-	Name: b2BucketName,
-	Type: StorageTypeB2,
-}
-
-var UploadsBucket = S3Bucket{
-	S3:   newB2("us-west-002", b2UploadKeyID, b2UploadKey),
-	Name: b2BucketName + "-upload",
-	Type: StorageTypeB2,
-}
-
-// AWS
-var AWS_FilesBucket = S3Bucket{
-	S3:   newS3("us-west-2", "", "", ""),
-	Name: "files.inter.tube",
-}
-
-var ConfigBucket = S3Bucket{
-	S3:   newS3("us-west-2", "", "", ""),
-	Name: "private.inter.tube",
-}
 
 type S3Bucket struct {
 	S3   *s3.S3
@@ -214,6 +186,7 @@ type Config struct {
 
 	FilesBucket   string
 	UploadsBucket string
+	CacheBucket   string
 
 	Region   string
 	Endpoint string
@@ -231,13 +204,10 @@ const (
 	StorageTypeS3 StorageType = "s3"
 	StorageTypeB2 StorageType = "b2"
 	StorageTypeR2 StorageType = "r2"
-	StorageTypeFS StorageType = "fs"
+	// StorageTypeFS StorageType = "fs"
 )
 
 func Init(cfg Config) {
-	S3AccessKeyID = cfg.AccessKeyID
-	S3AccessKeySecret = cfg.AccessKeySecret
-
 	var client *s3.S3
 	switch cfg.Type {
 	case StorageTypeS3:
@@ -246,6 +216,10 @@ func Init(cfg Config) {
 		client = newB2(cfg.Region, cfg.AccessKeyID, cfg.AccessKeySecret)
 	case StorageTypeR2:
 		client = newR2(cfg.CFAccountID, cfg.AccessKeyID, cfg.AccessKeySecret)
+	case "":
+		panic(fmt.Errorf("missing storage.type in configuration"))
+	default:
+		panic(fmt.Errorf("unknown storage.type in configuration: %q", cfg.Type))
 	}
 
 	FilesBucket = S3Bucket{
@@ -259,4 +233,16 @@ func Init(cfg Config) {
 		S3:   client,
 		Type: cfg.Type,
 	}
+
+	if cfg.CacheBucket != "" {
+		CacheBucket = S3Bucket{
+			Name: cfg.CacheBucket,
+			S3:   client,
+			Type: cfg.Type,
+		}
+	}
+}
+
+func IsCacheEnabled() bool {
+	return CacheBucket.Type != ""
 }

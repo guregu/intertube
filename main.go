@@ -61,6 +61,7 @@ func main() {
 			Type:            storage.StorageType(cfg.Storage.Type),
 			FilesBucket:     cfg.Storage.FilesBucket,
 			UploadsBucket:   cfg.Storage.UploadsBucket,
+			CacheBucket:     cfg.Storage.CacheBucket,
 			AccessKeyID:     cfg.Storage.AccessKeyID,
 			AccessKeySecret: cfg.Storage.AccessKeySecret,
 			Region:          cfg.Storage.Region,

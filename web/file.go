@@ -2,10 +2,8 @@ package web
 
 import (
 	"context"
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -13,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront/sign"
 	"github.com/guregu/kami"
 
 	"github.com/guregu/intertube/storage"
@@ -21,9 +18,6 @@ import (
 )
 
 const (
-	signingKeyID = "APKAJ2JKC5SON5X6HF6Q"
-	signingTTL   = 24 * time.Hour
-
 	cfAuthURL = "https://intertube.download/auth?token=%s&dl=%s" // token, track.B2Path
 	cfFileURL = "https://intertube.download/dl/%s?token=%s"      // track.B2Path, token
 
@@ -33,54 +27,6 @@ const (
 	thumbnailDownloadTTL = 1 * time.Hour
 	uploadTTL            = 4 * time.Hour
 )
-
-var signingPrivKey = loadKey()
-
-func loadKey() *rsa.PrivateKey {
-	r, err := storage.ConfigBucket.Get(signingKeyID + ".pem")
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-	key, err := sign.LoadPEMPrivKey(r)
-	if err != nil {
-		panic(err)
-	}
-	log.Println("Loaded signing key")
-	return key
-}
-
-func signURL(href string) (string, error) {
-	expires := time.Now().UTC().Add(signingTTL)
-	signer := sign.NewURLSigner(signingKeyID, signingPrivKey)
-	url, err := signer.Sign(href, expires)
-	return url, err
-}
-
-// http://localhost:8000/dl/tracks/006475680c12a260e0f22ee45f8a27d93b703c27.flac?cookie=1
-// https://inter.tube/dl/tracks/006475680c12a260e0f22ee45f8a27d93b703c27.flac?cookie=1
-func signCookie(href string) ([]*http.Cookie, error) {
-	expires := time.Now().UTC().Add(signingTTL)
-	signer := sign.NewCookieSigner(signingKeyID, signingPrivKey, func(o *sign.CookieOptions) {
-		o.Domain = "." + Domain
-		o.Path = "/"
-		// o.Secure = true
-	})
-	cookies, err := signer.SignWithPolicy(&sign.Policy{
-		Statements: []sign.Statement{
-			{
-				Resource: href,
-				Condition: sign.Condition{
-					DateLessThan: &sign.AWSEpochTime{Time: expires},
-				},
-			},
-		},
-	})
-	for _, cookie := range cookies {
-		cookie.SameSite = http.SameSiteLaxMode
-	}
-	return cookies, err
-}
 
 // intertube.download/auth?token=XYZ&r={home/dl}
 //

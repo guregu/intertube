@@ -40,7 +40,7 @@ func (d Dump) save(ctx context.Context) error {
 		return err
 	}
 	r := bytes.NewReader(buf.Bytes())
-	return storage.AWS_FilesBucket.Put("application/json", d.Key(), r)
+	return storage.CacheBucket.Put("application/json", d.Key(), r)
 }
 
 func (d Dump) encache() {
@@ -187,7 +187,7 @@ func (u User) GetDump() (Dump, error) {
 // }
 
 func loadDump(key string) (Dump, error) {
-	r, err := storage.AWS_FilesBucket.Get(key)
+	r, err := storage.CacheBucket.Get(key)
 	if err != nil {
 		return Dump{}, err
 	}

@@ -34,6 +34,7 @@
 				・<a href="/register">{{tr "login_toreg"}}</a>
 			</p>
 
+		{{if payment}}
 			<h3>{{tr "intro_what"}}</h3>
 			<p>{{tr "intro_explain"}}</p>
 
@@ -52,6 +53,7 @@
 
 			<h3>{{tr "intro_howmuch"}}</h3>
 			<p><span class="__finger">☛</span> <a href="/buy/">{{tr "intro_pricing"}}</a></p>
+		{{end}}
 		</main>
 		{{render "_foot" $}}
 	</body>

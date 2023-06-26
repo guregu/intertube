@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/guregu/intertube/storage"
 	"github.com/guregu/intertube/tube"
 )
 
@@ -13,7 +14,7 @@ func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	plan := tube.GetPlan(u.Plan)
 
 	var hasSub bool
-	if useStripe {
+	if UseStripe {
 		cust, err := getCustomer(u.CustomerID)
 		if err != nil {
 			panic(err)
@@ -23,14 +24,16 @@ func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		User     tube.User
-		Plan     tube.Plan
-		HasSub   bool
-		ErrorMsg string
+		User         tube.User
+		Plan         tube.Plan
+		HasSub       bool
+		ErrorMsg     string
+		CacheEnabled bool
 	}{
-		User:   u,
-		HasSub: hasSub,
-		Plan:   plan,
+		User:         u,
+		HasSub:       hasSub,
+		Plan:         plan,
+		CacheEnabled: storage.IsCacheEnabled(),
 	}
 	if err := getTemplate(ctx, "settings").Execute(w, data); err != nil {
 		panic(err)

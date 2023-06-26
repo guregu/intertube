@@ -54,66 +54,70 @@
 				{{$opt := $.User.Display}}
 				<table>
 					<tbody class="header">
-						<tr id="sub"><th colspan="2">{{tr "settings_subscription"}}</th></tr>
+						<tr id="sub"><th colspan="2">
+							{{if payment}}{{tr "settings_subscription"}}{{else}}{{tr "quota"}}{{end}}
+						</th></tr>
 					</tbody>
-					{{if $.User.Trialing}}
-					<tbody class="trialing">
-						<tr>
-							<td colspan="2" id="trial-explain">
-								<b>{{tr "settings_trialexplain"}}</b><br>
-								☛ <a href="/buy/" class="navlink">{{tr "settings_buylink"}}</a> 💸
-							</td>
-						</tr>
-						<tr>
-							<td>{{tr "settings_trialexpires"}}:</td>
-							<td>
-							{{if $.User.PlanExpire.IsZero}}
-								{{tr "settings_grandfathered"}}
-							{{else}}
-								{{if $.User.Expired}}⚠️ <b>{{tr "expired"}}</b> {{end}} 
-								{{$.User.PlanExpire | timestamp}}
-							{{end}}
-							</td>
-						</tr>
-					</tbody>
-					{{else}}
-					<tbody class="planned">
-						{{if $.HasSub}}
-						<tr>
-							<td><label for="plan">{{tr "plan"}}</label>:</td>
-							<td>{{tr $.User.Plan.Msg}} (<a class="navlink" href="/settings/payment">{{tr "settings_update"}}</a>)</td>
-						</tr>
-						{{end}}
-						<tr>
-						{{if (not $.HasSub)}}
+					{{if payment}}
+						{{if $.User.Trialing}}
+						<tbody class="trialing">
 							<tr>
 								<td colspan="2" id="trial-explain">
-									<b>{{tr "settings_expired"}}</b><br>
+									<b>{{tr "settings_trialexplain"}}</b><br>
 									☛ <a href="/buy/" class="navlink">{{tr "settings_buylink"}}</a> 💸
 								</td>
 							</tr>
-						{{else if $.User.Canceled}}
-							<td>{{tr "settings_standing"}}:</td>
-							<td>⚠️ {{tr "canceled"}} (<a class="navlink" href="/settings/payment">{{tr "settings_renew"}}</a>)</td>
+							<tr>
+								<td>{{tr "settings_trialexpires"}}:</td>
+								<td>
+								{{if $.User.PlanExpire.IsZero}}
+									{{tr "settings_grandfathered"}}
+								{{else}}
+									{{if $.User.Expired}}⚠️ <b>{{tr "expired"}}</b> {{end}} 
+									{{$.User.PlanExpire | timestamp}}
+								{{end}}
+								</td>
+							</tr>
+						</tbody>
 						{{else}}
-							<td>{{tr "settings_standing"}}:</td>
-							<td>{{$.User.PlanStatus}} (<a class="navlink" href="/settings/payment">{{if (eq $.User.PlanStatus "active")}}{{tr "settings_cancel"}}{{else}}{{tr "settings_renew"}}{{end}}</a>)</td>
-						{{end}}
-						</tr>
-						<tr>
-							<td>
-							{{if $.User.Canceled}}
-								{{tr "settings_expires"}}:
-							{{else}}
-								{{tr "settings_nextdue"}}:
+						<tbody class="planned">
+							{{if $.HasSub}}
+							<tr>
+								<td><label for="plan">{{tr "plan"}}</label>:</td>
+								<td>{{tr $.User.Plan.Msg}} (<a class="navlink" href="/settings/payment">{{tr "settings_update"}}</a>)</td>
+							</tr>
 							{{end}}
-							</td>
-							<td>
-								{{if $.User.Expired}}⏰{{end}} 
-								{{$.User.PlanExpire | date}}
-							</td>
-						</tr>
-					</tbody>
+							<tr>
+							{{if (not $.HasSub)}}
+								<tr>
+									<td colspan="2" id="trial-explain">
+										<b>{{tr "settings_expired"}}</b><br>
+										☛ <a href="/buy/" class="navlink">{{tr "settings_buylink"}}</a> 💸
+									</td>
+								</tr>
+							{{else if $.User.Canceled}}
+								<td>{{tr "settings_standing"}}:</td>
+								<td>⚠️ {{tr "canceled"}} (<a class="navlink" href="/settings/payment">{{tr "settings_renew"}}</a>)</td>
+							{{else}}
+								<td>{{tr "settings_standing"}}:</td>
+								<td>{{$.User.PlanStatus}} (<a class="navlink" href="/settings/payment">{{if (eq $.User.PlanStatus "active")}}{{tr "settings_cancel"}}{{else}}{{tr "settings_renew"}}{{end}}</a>)</td>
+							{{end}}
+							</tr>
+							<tr>
+								<td>
+								{{if $.User.Canceled}}
+									{{tr "settings_expires"}}:
+								{{else}}
+									{{tr "settings_nextdue"}}:
+								{{end}}
+								</td>
+								<td>
+									{{if $.User.Expired}}⏰{{end}} 
+									{{$.User.PlanExpire | date}}
+								</td>
+							</tr>
+						</tbody>
+						{{end}}
 					{{end}}
 					<tbody>
 						{{$quota := $.User.CalcQuota}}
@@ -139,6 +143,7 @@
 						{{end}}
 					</tbody>
 
+				{{if $.CacheEnabled}}
 					<tbody class="header">
 						<tr><th colspan="2">{{tr "settings_library"}}</th></tr>
 					</tbody>
@@ -151,6 +156,7 @@
 							</td>
 						</tr>
 					</tbody>
+				{{end}}
 
 					<tbody class="header">
 						<tr><th colspan="2">{{tr "settings_account"}}</th></tr>
@@ -219,10 +225,11 @@
 			<form id="reset-cache" action="/cache/reset" method="POST"></form>
 			<h3>{{tr "settings_actions"}}</h3>
 			<ul class="actions">
+			{{if payment}}
 				<li>
 					<form action="/settings/payment" method="GET"><input type="submit" value='🤑 {{tr "settings_payment"}}'></form>
-					
 				</li>
+			{{end}}
 				<li>
 					<form action="/logout" method="POST"><input type="submit" value='👋 {{tr "logout"}}'></form>
 				</li>

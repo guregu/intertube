@@ -41,19 +41,21 @@
 			<noscript>{{tr "noscript"}}</noscript>
 			<p>{{tr "loggedinas" $.User.Email}}</p>
 			<p>{{tr "index_intro"}}</p>
-			{{if $.User.Trialing}}
-				{{if $.User.Expired}}
-					{{if $.User.Grandfathered}}
-						<p>※ {{tr "index_grandfathered"}} 🤑</p>
+			{{if payment}}
+				{{if $.User.Trialing}}
+					{{if $.User.Expired}}
+						{{if $.User.Grandfathered}}
+							<p>※ {{tr "index_grandfathered"}} 🤑</p>
+						{{else}}
+							<p id="unpaid">⚠️ <a href="/buy/">{{tr "index_trialexpired"}}</a></p>
+						{{end}}
 					{{else}}
-						<p id="unpaid">⚠️ <a href="/buy/">{{tr "index_trialexpired"}}</a></p>
+						<p>※ {{tr "buy_trialnow" ($.User.TimeRemaining | days)}}</p>
 					{{end}}
 				{{else}}
-					<p>※ {{tr "buy_trialnow" ($.User.TimeRemaining | days)}}</p>
-				{{end}}
-			{{else}}
-				{{if $.User.Expired}}
-					<p id="unpaid">⚠️ <a href="/settings">{{tr "index_subexpired"}}</a></p>
+					{{if $.User.Expired}}
+						<p id="unpaid">⚠️ <a href="/settings">{{tr "index_subexpired"}}</a></p>
+					{{end}}
 				{{end}}
 			{{end}}
 
@@ -67,14 +69,16 @@
 					<td><a href="/music/">🎵</a></td>
 					<td><a href="/music/" class="navlink">{{tr "index_start_library"}}</a></td>
 				</tr>
-				{{if $.User.TrialOver}}
-				<tr>
-					<td><a href="/buy/">💸</a></td><td><a href="/settings/payment" class="navlink">{{tr "index_start_managesub"}}</a></td>
-				</tr>
-				{{else}}
-				<tr>
-					<td><a href="/buy/">💸</a></td><td><a href="/buy/" class="navlink">{{tr "index_start_buy"}}</a></td>
-				</tr>
+				{{if payment}}
+					{{if $.User.TrialOver}}
+					<tr>
+						<td><a href="/buy/">💸</a></td><td><a href="/settings/payment" class="navlink">{{tr "index_start_managesub"}}</a></td>
+					</tr>
+					{{else}}
+					<tr>
+						<td><a href="/buy/">💸</a></td><td><a href="/buy/" class="navlink">{{tr "index_start_buy"}}</a></td>
+					</tr>
+					{{end}}
 				{{end}}
 				<tr>
 					<td><a href="/settings">⚙️</a></td>
@@ -100,10 +104,12 @@
 					<td><a href="https://intertube.thread.zone/thread/6/1-50" target="_blank">💻</a></td>
 					<td><a href="https://intertube.thread.zone/thread/6/1-50" target="_blank" class="navlink">{{tr "index_more_desktop"}}</a></td>
 				</tr>
+			{{if payment}}
 				<tr>
 					<td><a href="mailto:greg.roseberry@gmail.com" target="_blank">🆘 </a></td>
 					<td><a href="mailto:greg.roseberry@gmail.com" target="_blank" class="navlink">{{tr "index_more_help"}}</a></td>
 				</tr>
+			{{end}}
 			</table>
 
 			<h2>{{tr "index_news"}}</h3>

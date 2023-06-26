@@ -129,8 +129,11 @@ func parseTemplates() *template.Template {
 		"loggedin": func() bool { return false },
 
 		"sign": func(key string) (string, error) {
-			// return attachmentHost + href
 			return storage.FilesBucket.PresignGet(key, thumbnailDownloadTTL)
+		},
+
+		"payment": func() bool {
+			return UseStripe
 		},
 
 		"blankzero": func(i int) string {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
 	"golang.org/x/sync/errgroup"
@@ -33,7 +34,16 @@ var (
 
 func Init(region, prefix, endpoint string, debug bool) {
 	dbPrefix = prefix
-	sesh, err := session.NewSession()
+	var err error
+	var sesh *session.Session
+	if endpoint == "" {
+		sesh, err = session.NewSession()
+	} else {
+		sesh, err = session.NewSession(&aws.Config{
+			Endpoint:    &endpoint,
+			Credentials: credentials.NewStaticCredentials("dummy", "dummy", ""),
+		})
+	}
 	if err != nil {
 		panic(err)
 	}

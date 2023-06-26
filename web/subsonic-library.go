@@ -149,7 +149,6 @@ func subsonicGetGenres(ctx context.Context, w http.ResponseWriter, r *http.Reque
 	}
 
 	writeSubsonic(ctx, w, r, resp)
-	return
 }
 
 func subsonicSearch2(ctx context.Context, w http.ResponseWriter, r *http.Request) {

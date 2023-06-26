@@ -236,7 +236,7 @@ func (u User) TimeRemaining() time.Duration {
 	if u.PlanExpire.IsZero() {
 		return 0
 	}
-	return u.PlanExpire.Sub(time.Now())
+	return time.Until(u.PlanExpire)
 }
 
 func (u User) Expired() bool {

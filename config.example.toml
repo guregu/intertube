@@ -1,18 +1,35 @@
 # domain = "localhost:9000"
 
 [db]
-#region = "us-west-2" # omit to use AWS_REGION env var
+# AWS region
+# omit to use AWS_REGION env var
+# not necessary for DynamoDB local
+#region = "us-west-2"
+
+# Table prefix
+# tables are created on startup if they don't exist
 prefix = "Tube-"
-debug = false
+
 # for real DynamoDB, comment this out:
 endpoint = "http://localhost:8880"
 region = "local" # region can be anything for DynamoDB local
 
+# ridiculously verbose DB debugging when true
+debug = false
+
+# Blob storage configuration
 [storage]
+# Bucket names
+# "uploads bucket" is what users upload their files to before processing
+# you can set a TTL or periodically purge it
+# "files bucket" contains tracks organized by user and album art
+# you can use the same bucket for both if you want (not recommended)
 uploads_bucket = "intertube-uploads"
 files_bucket = "intertube"
 
 ### MinIO configuration
+# this matches docker-compose.yml's settings
+# useful for local dev
 type = "s3"
 region = "local"
 endpoint = "http://localhost:9000/"
@@ -24,7 +41,7 @@ access_key_secret = "password"
 # access_key_id = "xxx"
 # access_key_secret = "yyy"
 # cloudflare_account = "zzz"
-# domain = "example.com"
+# domain = "example.com" # currently unused
 
 ### Backblaze B2
 # type = "b2"

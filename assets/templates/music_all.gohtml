@@ -56,7 +56,7 @@
 				</td>
 				<td class="track-pic" onclick="arguments[0].stopPropagation();return setFilter('album:{{.Album}}'),false;">
 					{{if .Picture.ID}}
-						<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | cdn}}" loading="lazy">
+						<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | sign}}" loading="lazy">
 					{{end}}
 				</td>
 			</tr>

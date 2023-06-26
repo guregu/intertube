@@ -295,7 +295,7 @@ func subsonicGetCoverArt(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	href, err := storage.FilesBucket.PresignGet(track.Picture.S3Key())
+	href, err := storage.FilesBucket.PresignGet(track.Picture.S3Key(), thumbnailDownloadTTL)
 	if err != nil {
 		panic(err)
 	}

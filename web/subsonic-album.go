@@ -118,7 +118,6 @@ func subsonicGetAlbumList1(ctx context.Context, w http.ResponseWriter, r *http.R
 	}
 
 	writeSubsonic(ctx, w, r, resp)
-	return
 }
 
 func subsonicGetAlbum(ctx context.Context, w http.ResponseWriter, r *http.Request) {

@@ -4,7 +4,7 @@
 	<div class="album meat-partial" id="{{$first.AlbumCode}}" data-album="{{$first.Album}}" data-artist="{{$first.Artist}}" data-title="{{range $album}} {{.Title}} {{end}}">
 		<div class="album-inner">
 			{{if $first.Picture.ID}}
-				<img class="album-cover" alt="{{$first.Picture.Desc}}" src="{{$first.Picture.S3Key | cdn}}" loading="lazy" onclick="return selectAlbum(this, arguments[0]) || toggleOrPlay('{{$first.ID}}'),false;">
+				<img class="album-cover" alt="{{$first.Picture.Desc}}" src="{{$first.Picture.S3Key | sign}}" loading="lazy" onclick="return selectAlbum(this, arguments[0]) || toggleOrPlay('{{$first.ID}}'),false;">
 			{{else}}
 				<div class="album-cover placeholder"></div>
 			{{end}}
@@ -21,7 +21,7 @@
 						<span class="track-album" style="display: none;">{{.Info.Album}}</span>
 						<span class="track-pic" style="display: none;">
 							{{if .Picture.ID}}
-								<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | cdn}}" loading="lazy">
+								<img class="album-cover" alt="{{.Picture.Desc}}" src="{{.Picture.S3Key | sign}}" loading="lazy">
 							{{end}}
 						</span>
 					</li>

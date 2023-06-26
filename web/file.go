@@ -28,6 +28,10 @@ const (
 	cfFileURL = "https://intertube.download/dl/%s?token=%s"      // track.B2Path, token
 
 	maxFileSize = 500 * 1000 * 1000 // 500MB
+
+	fileDownloadTTL      = 1 * time.Hour
+	thumbnailDownloadTTL = 1 * time.Hour
+	uploadTTL            = 4 * time.Hour
 )
 
 var signingPrivKey = loadKey()
@@ -67,7 +71,7 @@ func signCookie(href string) ([]*http.Cookie, error) {
 			{
 				Resource: href,
 				Condition: sign.Condition{
-					DateLessThan: &sign.AWSEpochTime{expires},
+					DateLessThan: &sign.AWSEpochTime{Time: expires},
 				},
 			},
 		},
@@ -104,7 +108,7 @@ func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 		panic(err)
 	}
 
-	href, err := storage.FilesBucket.PresignGet(f.B2Key())
+	href, err := storage.FilesBucket.PresignGet(f.B2Key(), fileDownloadTTL)
 	if err != nil {
 		panic(err)
 	}
@@ -168,7 +172,7 @@ func uploadStart(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	disp := encodeContentDisp(name)
-	url, err := storage.UploadsBucket.PresignPut(zf.Path(), size, disp)
+	url, err := storage.UploadsBucket.PresignPut(zf.Path(), size, disp, uploadTTL)
 	if err != nil {
 		panic(err)
 	}
@@ -237,7 +241,7 @@ func uploadStart2(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		}
 
 		disp := encodeContentDisp(f.Name)
-		url, err := storage.UploadsBucket.PresignPut(zf.Path(), f.Size, disp)
+		url, err := storage.UploadsBucket.PresignPut(zf.Path(), f.Size, disp, uploadTTL)
 		if err != nil {
 			panic(err)
 		}

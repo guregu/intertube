@@ -61,7 +61,7 @@ func (b S3Bucket) Put(contentType, key string, r io.ReadSeeker) error {
 	return err
 }
 
-func (b S3Bucket) PresignPut(key string, size int64, disp string) (string, error) {
+func (b S3Bucket) PresignPut(key string, size int64, disp string, ttl time.Duration) (string, error) {
 	req, _ := b.S3.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(b.Name),
 		Key:    aws.String(key),
@@ -69,16 +69,16 @@ func (b S3Bucket) PresignPut(key string, size int64, disp string) (string, error
 		ContentLength:      aws.Int64(size),
 		ContentDisposition: aws.String(disp),
 	})
-	url, err := req.Presign(30 * time.Minute)
+	url, err := req.Presign(ttl)
 	return url, err
 }
 
-func (b S3Bucket) PresignGet(key string) (string, error) {
+func (b S3Bucket) PresignGet(key string, ttl time.Duration) (string, error) {
 	req, _ := b.S3.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(b.Name),
 		Key:    aws.String(key),
 	})
-	url, err := req.Presign(1 * time.Hour)
+	url, err := req.Presign(ttl)
 	return url, err
 }
 
@@ -152,7 +152,6 @@ func (b S3Bucket) Head(key string) (S3Head, error) {
 }
 
 func (b S3Bucket) List(prefix string) (map[string]S3Head, error) {
-	// var objs []interface{}
 	objs := make(map[string]S3Head)
 	err := b.S3.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(b.Name),
@@ -167,23 +166,22 @@ func (b S3Bucket) List(prefix string) (map[string]S3Head, error) {
 }
 
 func newB2(region string, keyID, key string) *s3.S3 {
-	// println(keyID, key)
 	endpoint := fmt.Sprintf("https://s3.%s.backblazeb2.com", region)
-	return s3.New(session.New(), &aws.Config{
-		Region:      aws.String(region),
-		Endpoint:    aws.String(endpoint),
-		Credentials: credentials.NewStaticCredentials(keyID, key, ""),
-		// S3ForcePathStyle: aws.Bool(true),
-	})
+	return s3.New(session.Must(session.NewSession(&aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		Credentials:      credentials.NewStaticCredentials(keyID, key, ""),
+		S3ForcePathStyle: aws.Bool(true),
+	})))
 }
 
 func newR2(accountID string, keyID, key string) *s3.S3 {
 	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
-	return s3.New(session.New(), &aws.Config{
+	return s3.New(session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("auto"),
 		Endpoint:    aws.String(endpoint),
 		Credentials: credentials.NewStaticCredentials(keyID, key, ""),
-	})
+	})))
 }
 
 func newS3(region, key, secret, endpoint string) *s3.S3 {
@@ -197,7 +195,7 @@ func newS3(region, key, secret, endpoint string) *s3.S3 {
 		cfg.Endpoint = &endpoint
 		cfg.S3ForcePathStyle = aws.Bool(true)
 	}
-	return s3.New(session.New(), cfg)
+	return s3.New(session.Must(session.NewSession(cfg)))
 }
 
 var (

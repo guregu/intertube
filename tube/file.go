@@ -11,18 +11,6 @@ import (
 	// "github.com/aws/aws-sdk-go/service/cloudfront/sign"
 )
 
-const attachmentPath = "up/%s/%s" // zone, id
-
-const (
-	uploadQuotaBase     int64 = 200 * 1024 * 1024       // 200MB
-	uploadQuotaVerified       = 2 * 1024 * 1024 * 1024  // 2GB
-	uploadQuotaPatron         = 20 * 1024 * 1024 * 1024 // 20GB
-
-	uploadMaxBase     int64 = 50 * 1024 * 1024   // 50MB
-	uploadMaxVerified       = 200 * 1024 * 1024  // 200MB
-	uploadMaxPatron         = 1024 * 1024 * 1024 // 1GB
-)
-
 type File struct {
 	ID     string `dynamo:",hash" index:"UserID-ID-index,range"`
 	UserID int    `index:"UserID-ID-index,hash"`
@@ -39,10 +27,6 @@ type File struct {
 
 	TrackID string
 }
-
-// func (File) CreateTable(create *dynamo.CreateTable) {
-// 	create.Index
-// }
 
 func NewFile(userID int, filename string, size int64) File {
 	now := time.Now().UTC()
@@ -179,14 +163,4 @@ func GetFilesByUser(ctx context.Context, userID string) ([]File, error) {
 		err = nil
 	}
 	return files, err
-}
-
-func uploadQuota(u User) int64 {
-	return uploadQuotaVerified
-	// TODO
-}
-
-func uploadMaxSize(u User) int64 {
-	return uploadMaxPatron
-	// TODO
 }

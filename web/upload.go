@@ -3,7 +3,6 @@ package web
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -197,53 +196,11 @@ func savePic(data []byte, ext string, mimetype string, desc string) (tube.Pictur
 	return pic, err
 }
 
-// for files (TODO: use sha3?)
-func sha1Sum(r io.ReadSeeker) (string, error) {
-	h := sha1.New()
-	_, err := io.Copy(h, r)
-	if err != nil {
-		return "", nil
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
-
 // for images
 func sumBytes(b []byte) (string, error) {
-	r := bytes.NewReader(b)
-	hash := sha3.New224()
-	_, err := io.Copy(hash, r)
-	sum := base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
-	return sum, err
-}
-
-func copyTags(tags map[string]interface{}, exclude ...string) map[string]interface{} {
-	m := make(map[string]interface{}, len(tags))
-next:
-	for k, v := range tags {
-		for _, ex := range exclude {
-			if k == ex {
-				continue next
-			}
-		}
-		if vstr, ok := v.(string); ok {
-			if len(vstr) == 0 {
-				continue next
-			}
-			raw := []byte(vstr)
-			// sometimes this sh*t isn't utf8 :c
-			if !utf8.Valid(raw) {
-				v = raw
-			}
-		}
-
-		// wtf: some tags used fucked up non-utf8 encoding
-		k = strings.TrimRight(k, "\u0000")
-		if !utf8.ValidString(k) {
-			k = strings.ToValidUTF8(k, replacementChar)
-		}
-		m[k] = v
-	}
-	return m
+	sum := sha3.Sum224(b)
+	str := base64.RawURLEncoding.EncodeToString(sum[:])
+	return str, nil
 }
 
 func mimetypeOfTrack(ftype tag.FileType) string {

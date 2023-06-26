@@ -19,6 +19,7 @@ Install these things:
 - Docker or equivalent
 
 ```bash
+# git clone this project, then from the root directory:
 docker compose up -d
 go build
 ./intertube --cfg=config.example.toml
@@ -27,6 +28,10 @@ go build
 Then access the site at http://localhost:8000.
 
 When running in local mode, you can edit the HTML templates and they should reload without having to restart the server.
+
+### Running it on The Cloud
+
+Docs coming soon :-)
 
 ### Configuration
 

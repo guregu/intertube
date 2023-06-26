@@ -23,9 +23,6 @@ import (
 const (
 	signingKeyID = "APKAJ2JKC5SON5X6HF6Q"
 	signingTTL   = 24 * time.Hour
-	// attachmentHost = "https://cdn.inter.tube/"
-	attachmentHost = "https://intertube.download/"
-	// attachmentHost = "https://d1gt8d36ybya0q.cloudfront.net/"
 
 	cfAuthURL = "https://intertube.download/auth?token=%s&dl=%s" // token, track.B2Path
 	cfFileURL = "https://intertube.download/dl/%s?token=%s"      // track.B2Path, token

@@ -77,6 +77,7 @@ func createB2Token(ctx context.Context, userID int) (token string, expires time.
 	return token, expires, err
 }
 
+// TODO: get rid of this
 func b2DownloadURL(u tube.User, track tube.Track) string {
 	href := fmt.Sprintf(cfFileURL, track.B2Key(), u.B2Token)
 	return href

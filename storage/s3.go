@@ -69,7 +69,7 @@ func (b S3Bucket) PresignPut(key string, size int64, disp string) (string, error
 		ContentLength:      aws.Int64(size),
 		ContentDisposition: aws.String(disp),
 	})
-	url, err := req.Presign(15 * time.Minute)
+	url, err := req.Presign(30 * time.Minute)
 	return url, err
 }
 
@@ -78,7 +78,7 @@ func (b S3Bucket) PresignGet(key string) (string, error) {
 		Bucket: aws.String(b.Name),
 		Key:    aws.String(key),
 	})
-	url, err := req.Presign(45 * time.Minute)
+	url, err := req.Presign(1 * time.Hour)
 	return url, err
 }
 

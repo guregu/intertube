@@ -12,6 +12,7 @@ import (
 
 	"github.com/guregu/kami"
 
+	"github.com/guregu/intertube/storage"
 	"github.com/guregu/intertube/tube"
 )
 
@@ -294,7 +295,12 @@ func subsonicGetCoverArt(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, attachmentHost+track.Picture.S3Key(), http.StatusTemporaryRedirect)
+	href, err := storage.FilesBucket.PresignGet(track.Picture.S3Key())
+	if err != nil {
+		panic(err)
+	}
+
+	http.Redirect(w, r, href, http.StatusTemporaryRedirect)
 }
 
 func subsonicGetRandomSongs(ctx context.Context, w http.ResponseWriter, r *http.Request) {

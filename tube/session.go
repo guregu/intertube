@@ -14,7 +14,7 @@ const (
 )
 
 type Session struct {
-	Token   string
+	Token   string `dynamo:",hash"`
 	UserID  int
 	Expires time.Time `dynamo:",unixtime"`
 	IP      string

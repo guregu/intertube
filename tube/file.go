@@ -24,8 +24,8 @@ const (
 )
 
 type File struct {
-	ID     string
-	UserID int
+	ID     string `dynamo:",hash" index:"UserID-ID-index,range"`
+	UserID int    `index:"UserID-ID-index,hash"`
 
 	Size     int64
 	Type     string
@@ -39,6 +39,10 @@ type File struct {
 
 	TrackID string
 }
+
+// func (File) CreateTable(create *dynamo.CreateTable) {
+// 	create.Index
+// }
 
 func NewFile(userID int, filename string, size int64) File {
 	now := time.Now().UTC()

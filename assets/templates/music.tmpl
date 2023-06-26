@@ -462,6 +462,9 @@
 					console.log(err);
 				}
 
+				// TODO: re-enable
+				return;
+
 				loadCache(function(ok) {
 					var cache = getCache(this.location);
 					if (!cache || !ok) {

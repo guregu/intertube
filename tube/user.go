@@ -19,8 +19,8 @@ var TrialDuration = 14 * time.Hour * 24
 const CurrentPhase = RegPhaseEarlyAccess
 
 type User struct {
-	ID       int
-	Email    string
+	ID       int    `dynamo:",hash"`
+	Email    string `index:"Email-index,hash"`
 	Password []byte `json:"-"`
 	Regdate  time.Time
 	Phase    RegPhase // phase at time of reg
@@ -30,7 +30,7 @@ type User struct {
 	Quota  int64
 	Tracks int
 
-	CustomerID string // from stripe
+	CustomerID string `index:"CustomerID-index,hash"` // from stripe
 	Plan       PlanKind
 	PlanStatus PlanStatus // from stripe
 	PlanExpire time.Time  `dynamo:",omitempty"`

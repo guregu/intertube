@@ -10,20 +10,19 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront/sign"
+	"github.com/guregu/kami"
+
 	"github.com/guregu/intertube/storage"
 	"github.com/guregu/intertube/tube"
-	"github.com/guregu/kami"
 )
 
 const (
 	signingKeyID = "APKAJ2JKC5SON5X6HF6Q"
 	signingTTL   = 24 * time.Hour
-	// attachmentHost = "https://cdn.inter.tube/"
-	attachmentHost = "https://intertube.download/"
-	// attachmentHost = "https://d1gt8d36ybya0q.cloudfront.net/"
 
 	cfAuthURL = "https://intertube.download/auth?token=%s&dl=%s" // token, track.B2Path
 	cfFileURL = "https://intertube.download/dl/%s?token=%s"      // track.B2Path, token
@@ -80,9 +79,13 @@ func signCookie(href string) ([]*http.Cookie, error) {
 }
 
 // intertube.download/auth?token=XYZ&r={home/dl}
-// 		set cookie, redir to inter.tube
+//
+//	set cookie, redir to inter.tube
+//
 // intertube.download/file/...
-//		check cookie
+//
+//	check cookie
+//
 // https://intertube.download/auth?token=B2_TOKEN?dl=USERID/FILENAME
 func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
@@ -100,79 +103,26 @@ func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		panic(err)
 	}
-	// if f.Deleted {
-	// 	if storage.FilesBucket.Exists(f.Path()) {
-	// 		storage.FilesBucket.Delete(f.Path())
-	// 	}
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
-	// if f.Deleted || f.UserID != u.ID {
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
 
-	// w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-	// b2 stuff
-	if err := refreshB2Token(ctx, &u, 1*time.Hour); err != nil {
-		panic(err)
-	}
-
-	// TODO: rejigger to never expire?
-	w.Header().Del("Cache-Control")
-	// w.Header().Set("Cache-Control", "private")
-	w.Header().Set("Expires", u.B2Expire.Format(http.TimeFormat))
-
-	cfhref := b2DownloadURL(u, f)
-	// cfhref := fmt.Sprintf(cfFileURL, f.B2Key(), u.B2Token)
-	// cookies broken in safari...
-	// if u.ID == 2 {
-	// 	cfhref = fmt.Sprintf(cfAuthURL, u.B2Token, f.B2Key())
-	// }
-	http.Redirect(w, r, cfhref, http.StatusTemporaryRedirect)
-	return
-
-	// old cloudfront stuff
-	href := attachmentHost + f.S3Key()
-
-	if !DebugMode {
-		// use cookies instead of signed URL to allow for caching
-		cookies, err := signCookie(href)
-		if err != nil {
-			panic(err)
-		}
-		for _, cookie := range cookies {
-			http.SetCookie(w, cookie)
-		}
-		url := href
-		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-		return
-	}
-
-	url, err := signURL(href)
+	href, err := storage.FilesBucket.PresignGet(f.B2Key())
 	if err != nil {
 		panic(err)
 	}
-
-	if r.URL.Query().Get("render") == "url" {
-		fmt.Fprint(w, url)
-		return
-	}
-
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, href, http.StatusTemporaryRedirect)
 }
 
 func refreshB2Token(ctx context.Context, u *tube.User, fudge time.Duration) error {
 	now := time.Now().UTC().Add(-fudge)
-	if u.B2Token == "" || now.After(u.B2Expire) {
-		token, expire, err := createB2Token(ctx, u.ID)
-		if err != nil {
-			return err
-		}
-		if err := u.SetB2Token(ctx, token, expire); err != nil {
-			return err
-		}
+	if u.B2Token != "" && now.Before(u.B2Expire) {
+		return nil
+	}
+
+	token, expire, err := createB2Token(ctx, u.ID)
+	if err != nil {
+		return err
+	}
+	if err := u.SetB2Token(ctx, token, expire); err != nil {
+		return err
 	}
 	return nil
 }
@@ -382,28 +332,10 @@ func DeleteFile(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "//"+Domain+"/account/files", http.StatusSeeOther)
 }
 
-func MyFiles(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	// a, _ := AccountOf(ctx)
-	// files, err := zone.GetFilesByAccount(ctx, a.ID)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// data := struct {
-	// 	common
-	// 	Files []zone.File
-	// }{
-	// 	common: commonData(ctx),
-	// 	Files:  files,
-	// }
-
-	// if err := Template(ctx, "account-files").Execute(w, data); err != nil {
-	// 	panic(err)
-	// }
-}
-
 func encodeContentDisp(filename string) string {
 	ext := path.Ext(filename)
 	// return "attachment; filename*=UTF-8''" + url.PathEscape(filename)
-	return "attachment; filename=\"file" + ext + "\"; filename*=UTF-8''" + url.QueryEscape(filename)
+	escaped := url.QueryEscape(filename)
+	escaped = strings.ReplaceAll(escaped, "+", "%20")
+	return "attachment; filename=\"file" + ext + "\"; filename*=UTF-8''" + escaped
 }

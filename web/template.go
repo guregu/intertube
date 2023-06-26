@@ -15,6 +15,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/kardianos/osext"
 
+	"github.com/guregu/intertube/storage"
 	"github.com/guregu/intertube/tube"
 )
 
@@ -127,8 +128,9 @@ func parseTemplates() *template.Template {
 		"path":     func() string { return "" },
 		"loggedin": func() bool { return false },
 
-		"cdn": func(href string) string {
-			return attachmentHost + href
+		"cdn": func(key string) (string, error) {
+			// return attachmentHost + href
+			return storage.FilesBucket.PresignGet(key)
 		},
 		"sign": func(href string) (string, error) {
 			return signURL(href)

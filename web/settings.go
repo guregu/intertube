@@ -12,12 +12,15 @@ func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 	plan := tube.GetPlan(u.Plan)
 
-	cust, err := getCustomer(u.CustomerID)
-	if err != nil {
-		panic(err)
+	var hasSub bool
+	if useStripe {
+		cust, err := getCustomer(u.CustomerID)
+		if err != nil {
+			panic(err)
+		}
+		// spew.Dump(cust)
+		hasSub = cust.Subscriptions != nil && len(cust.Subscriptions.Data) > 0
 	}
-	// spew.Dump(cust)
-	hasSub := cust.Subscriptions != nil && len(cust.Subscriptions.Data) > 0
 
 	data := struct {
 		User     tube.User

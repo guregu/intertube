@@ -8,10 +8,27 @@ services:
     command: "-jar DynamoDBLocal.jar -sharedDb"
   minio:
     image: minio/minio:latest
-    environment:
+    environment: &minio-vars
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: password
     command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
       - "9001:9001"
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      <<: *minio-vars
+      INTERTUBE_UPLOADS_BUCKET: intertube-uploads
+      INTERTUBE_FILES_BUCKET: intertube
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set storage http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb storage/$${INTERTUBE_UPLOADS_BUCKET};
+      /usr/bin/mc policy set public storage/$${INTERTUBE_UPLOADS_BUCKET};
+      /usr/bin/mc mb storage/$${INTERTUBE_FILES_BUCKET};
+      /usr/bin/mc policy set public storage/$${INTERTUBE_FILES_BUCKET};
+      exit 0;
+      "

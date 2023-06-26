@@ -23,6 +23,8 @@ type Config struct {
 		AccessKeySecret   string `toml:"access_key_secret"`
 		CloudflareAccount string `toml:"cloudflare_account"`
 		Domain            string `toml:"domain"`
+		Region            string `toml:"region"`
+		Endpoint          string `toml:"endpoint"`
 	} `toml:"storage"`
 }
 

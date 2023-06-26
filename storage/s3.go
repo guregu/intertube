@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
@@ -37,12 +36,12 @@ var UploadsBucket = S3Bucket{
 
 // AWS
 var AWS_FilesBucket = S3Bucket{
-	S3:   newS3("us-west-2"),
+	S3:   newS3("us-west-2", "", "", ""),
 	Name: "files.inter.tube",
 }
 
 var ConfigBucket = S3Bucket{
-	S3:   newS3("us-west-2"),
+	S3:   newS3("us-west-2", "", "", ""),
 	Name: "private.inter.tube",
 }
 
@@ -122,7 +121,6 @@ func (b S3Bucket) Copy(dst, src string) error {
 
 func (b S3Bucket) CopyFromBucket(dst string, srcBucket S3Bucket, src string, mime, contentDisp string) error {
 	copySrc := srcBucket.Name + "/" + src
-	log.Println("copysrc", copySrc)
 	_, err := b.S3.CopyObject(&s3.CopyObjectInput{
 		Bucket:             &b.Name,
 		CopySource:         &copySrc,
@@ -188,10 +186,18 @@ func newR2(accountID string, keyID, key string) *s3.S3 {
 	})
 }
 
-func newS3(region string) *s3.S3 {
-	return s3.New(session.New(), &aws.Config{
+func newS3(region, key, secret, endpoint string) *s3.S3 {
+	cfg := &aws.Config{
 		Region: aws.String(region),
-	})
+	}
+	if key != "" && secret != "" {
+		cfg.Credentials = credentials.NewStaticCredentials(key, secret, "")
+	}
+	if endpoint != "" {
+		cfg.Endpoint = &endpoint
+		cfg.S3ForcePathStyle = aws.Bool(true)
+	}
+	return s3.New(session.New(), cfg)
 }
 
 var (
@@ -237,7 +243,7 @@ func Init(cfg Config) {
 	var client *s3.S3
 	switch cfg.Type {
 	case StorageTypeS3:
-		client = newS3(cfg.Region)
+		client = newS3(cfg.Region, cfg.AccessKeyID, cfg.AccessKeySecret, cfg.Endpoint)
 	case StorageTypeB2:
 		client = newB2(cfg.Region, cfg.AccessKeyID, cfg.AccessKeySecret)
 	case StorageTypeR2:

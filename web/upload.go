@@ -334,8 +334,6 @@ func guessMetadata(name string, ftype tag.FileType) tag.Metadata {
 		}
 		strs = append(strs, p)
 	}
-	fmt.Printf("n: %#v\n", nums)
-	fmt.Printf("s: %#v\n", strs)
 
 	if len(strs) == 0 {
 		return guessedMeta{title: name, ftype: ftype}

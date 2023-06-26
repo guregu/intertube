@@ -1,21 +1,33 @@
-domain = "inter.tube"
+# domain = "localhost:9000"
 
 [db]
-#region = "us-west-2"
+#region = "us-west-2" # omit to use AWS_REGION env var
 prefix = "Tube-"
 debug = false
 # for real DynamoDB, comment this out:
 endpoint = "http://localhost:8880"
-region = "local"
+region = "local" # region can be anything for DynamoDB local
+
 [storage]
-### MinIO
-# TODO
+uploads_bucket = "intertube-uploads"
+files_bucket = "intertube"
+
+### MinIO configuration
+type = "s3"
+region = "local"
+endpoint = "http://localhost:9000/"
+access_key_id = "root"
+access_key_secret = "password"
 
 ### Cloudflare R2
-type = "r2"
-access_key_id = "xxx"
-access_key_secret = "yyy"
-cloudflare_account = "zzz"
-domain = "example.com"
-uploads_bucket = "intertube-test-uploads"
-files_bucket = "intertube-test"
+# type = "r2"
+# access_key_id = "xxx"
+# access_key_secret = "yyy"
+# cloudflare_account = "zzz"
+# domain = "example.com"
+
+### Backblaze B2
+# type = "b2"
+# access_key_id = "aaaaaa"
+# access_key_secret = "bbbbb/cccc"
+# region = "us-west-002"

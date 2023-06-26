@@ -12,29 +12,25 @@ This uses Backblaze B2 to host files. It uses Cloudflare Workers to access B2 so
 
 The backend itself is Go, using SSR (html/template) and some hairy vanilla JS for the browser music player. It runs on AWS Lambda. The data is stored in DynamoDB. There is some functionality for caching user libraries as JSON blobs in S3 (via DynamoDB Stream event handling lambdas), but it's kind of a mess.
 
-### Environment variables
+### Running it locally
 
-B2 is Backblaze B2, CF is Cloudflare.
+Here's a way to run this easily, using DynamoDB local and MinIO:
 
 ```bash
-# used for uploading files
-export B2_KEY_ID=
-export B2_KEY=
-# used in events/cloudflare.go to store B2 API key for the CF workers
-export CF_ACCOUNT=
-export CF_API_EMAIL=
-export CF_API_KEY=
-export CF_KV_NAMESPACE=
-export STRIPE_ACCOUNT=
-export TEST_STRIPE_PUBLIC=
-export TEST_STRIPE_KEY=
-export TEST_STRIPE_SIG=
-export STRIPE_PUBLIC=
-export STRIPE_KEY=
-export STRIPE_SIG=
+docker compose up -d
+go build
+./intertube --cfg=config.example.toml
 ```
 
-Unfortunately, there's some hardcoded bucket names and domains that need to be made configurable.
+Then access the site at http://localhost:8000.
+
+### Configuration
+
+See `config.example.toml`.
+
+You can specify the config file with the `--cfg file/path.toml` command line option.
+
+By default it looks at `config.toml` in the working directory.
 
 ### Interested?
 

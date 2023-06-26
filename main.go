@@ -63,6 +63,8 @@ func main() {
 			UploadsBucket:   cfg.Storage.UploadsBucket,
 			AccessKeyID:     cfg.Storage.AccessKeyID,
 			AccessKeySecret: cfg.Storage.AccessKeySecret,
+			Region:          cfg.Storage.Region,
+			Endpoint:        cfg.Storage.Endpoint,
 			CFAccountID:     cfg.Storage.CloudflareAccount,
 		}
 		storage.Init(storageCfg)

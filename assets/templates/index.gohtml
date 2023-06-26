@@ -32,6 +32,10 @@
 			#stuff:target {
 				background: var(--hi-bg);
 			}
+
+			main > h3 {
+				margin-top: 1em;
+			}
 		</style>
 	</head>
 	<body>
@@ -112,6 +116,7 @@
 			{{end}}
 			</table>
 
+		{{if payment}}
 			<h2>{{tr "index_news"}}</h3>
 			<ul>
 				<li>[2023/05/03] fixed a bug with the "next" button. re-enabled cache, reset it on settings page if it gets weird (and let me know)</li>
@@ -130,6 +135,7 @@
 				<li>desktop app for uploading stuff</li>
 				<li>what features do you want to see? send me an e-mail.</li>
 			</ul>
+		{{end}}
 		</main>
 	</body>
 </html>

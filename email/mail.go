@@ -1,6 +1,8 @@
 package email
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -8,9 +10,21 @@ import (
 
 const noreply = " <noreply@inter.tube>"
 
-var mailer = ses.New(session.New(), &aws.Config{
-	Region: aws.String("us-west-2"),
-})
+var mailer *ses.SES
+
+// TODO: make this configurable later
+// for now just fail without exploding
+
+func init() {
+	sesh, err := session.NewSession()
+	if err != nil {
+		log.Println("email is not configured:", err)
+		return
+	}
+	mailer = ses.New(sesh, &aws.Config{
+		Region: aws.String("us-west-2"),
+	})
+}
 
 func Send(from, to, subject, content string) error {
 	input := &ses.SendEmailInput{
@@ -33,4 +47,8 @@ func Send(from, to, subject, content string) error {
 	}
 	_, err := mailer.SendEmail(input)
 	return err
+}
+
+func IsEnabled() bool {
+	return mailer != nil
 }

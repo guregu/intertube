@@ -22,6 +22,8 @@ var id3v2to3 = map[string]string{
 	// "COM": "COMM", // panics on *tag.Comm conversion
 }
 
+// unfuckID3 fixes the given metadata if it is ID3 format but with ID2 keys
+// (yes, such terrible files actually exist)
 func unfuckID3(metadata tag.Metadata) {
 	if metadata.Format() != tag.ID3v2_3 {
 		return
@@ -43,6 +45,10 @@ func unfuckID3(metadata tag.Metadata) {
 		}
 	}
 }
+
+// TODO: we used to store the ID3 tags as a map in the DB
+// but there's too many weird non-utf8 tags floating around
+// revisit later?
 
 func copyTags(tags map[string]interface{}, exclude ...string) map[string]interface{} {
 	m := make(map[string]interface{}, len(tags))

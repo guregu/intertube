@@ -3,7 +3,9 @@ package web
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/mail"
 	"net/url"
@@ -11,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/guregu/intertube/email"
 	mailer "github.com/guregu/intertube/email"
 	"github.com/guregu/intertube/tube"
 )
@@ -88,6 +91,13 @@ func requireAdmin(ctx context.Context, w http.ResponseWriter, r *http.Request) c
 	return ctx
 }
 
+type loginFormData struct {
+	Jump        string
+	Email       string
+	MailEnabled bool
+	ErrorMsg    string
+}
+
 func loginForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	_, loggedIn := userFrom(ctx)
 	if loggedIn {
@@ -95,9 +105,9 @@ func loginForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data = struct {
-		Jump string
-	}{}
+	var data = loginFormData{
+		MailEnabled: email.IsEnabled(),
+	}
 
 	if rawJump := r.URL.Query().Get("r"); rawJump != "" {
 		data.Jump, _ = decodeRedirect(rawJump)
@@ -110,26 +120,47 @@ func loginForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 // TODO: friendly error messages
 func login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
+	emailaddr := r.FormValue("email")
 	pass := r.FormValue("password")
 	jump := r.FormValue("jump")
 
-	user, err := tube.GetUserByEmail(ctx, email)
-	if err != nil {
+	if jump != "" && (jump[0] != '/' || strings.HasPrefix(jump, `//`)) {
+		log.Println("invalid jump:", jump)
+		jump = "/"
+	}
+	if jump == "" {
+		jump = "/"
+	}
+
+	renderError := func(msg string) {
+		data := loginFormData{
+			Email:       emailaddr,
+			Jump:        jump,
+			MailEnabled: email.IsEnabled(),
+			ErrorMsg:    msg,
+		}
+		if err := getTemplate(ctx, "login").Execute(w, data); err != nil {
+			panic(err)
+		}
+	}
+
+	user, err := tube.GetUserByEmail(ctx, emailaddr)
+	switch {
+	case errors.Is(err, tube.ErrNotFound):
+		renderError("error_no_user")
+		return
+	case err != nil:
 		panic(err)
 	}
 
 	if !user.ValidPassword(pass) {
-		panic("bad password")
+		renderError("error_bad_password")
+		return
 	}
 
 	sesh, err := tube.CreateSession(ctx, user.ID, ipAddress(r))
 	if err != nil {
 		panic(err)
-	}
-
-	if jump == "" {
-		jump = "/"
 	}
 
 	http.SetCookie(w, validAuthCookie(sesh))

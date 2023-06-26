@@ -7,27 +7,35 @@
 		#spiel, p {
 			max-width: 80%;
 		}
+		.error {
+			color: red;
+		}
 		</style>
 	</head>
 	<body>
 		{{render "_nav" $}}
 		<main>
 			<h2>{{tr "login_title"}}</h2>
+			{{if $.ErrorMsg}}
+				<p class="error">{{tr $.ErrorMsg}}</p>
+			{{end}}
 			<form action="/login" method="POST">
 				{{with $.Jump}}
 					<input type="hidden" name="jump" value="{{.}}">
 				{{end}}
 				<table class="form-table">
-					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" placeholder="me@example.com" autocomplete="email"></td></tr>
+					<tr><td><label for="email">{{tr "email"}}:</label></td><td><input type="email" id="email" name="email" placeholder="me@example.com" value="{{$.Email}}" autocomplete="email"></td></tr>
 					<tr><td><label for="password">{{tr "password"}}:</label></td><td><input type="password" id="password" name="password" autocomplete="current-password"></td></tr>
 					<tr><td></td><td><input type="submit" value='{{tr "login"}}'></td></tr>
 				</table>
 			</form>
 
+		{{if $.MailEnabled}}
 			<h3>{{tr "login_forgot"}}</h3>
 			<p>
 				・<a href="/forgot">{{tr "login_toforgot"}}</a>
 			</p>
+		{{end}}
 
 			<h3>{{tr "login_needreg"}}</h3>
 			<p>

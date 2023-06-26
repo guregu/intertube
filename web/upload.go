@@ -256,10 +256,8 @@ func skippableError(err error) bool {
 		return true
 	}
 	str := err.Error()
-	if strings.Contains(str, "mp3:") {
-		return true
-	}
-	return false
+	// mp3 package chokes on certain files, so let it fail
+	return strings.Contains(str, "mp3:")
 }
 
 type guessedMeta struct {

@@ -277,21 +277,19 @@ type subsonicLicense struct {
 	License struct {
 		Valid   bool   `xml:"valid,attr" json:"valid"`
 		Expires string `xml:"licenseExpires,attr" json:"licenseExpires"`
+		Email   string `xml:"email,attr,omitempty" json:"email,omitempty"`
 	} `xml:"license" json:"license"`
 }
 
 func subsonicGetLicense(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	// fuck da police 🤠
-	u, ok := userFrom(ctx)
-	expire := u.PlanExpire.UTC()
-	if true /* TODO: remove */ || u.Grandfathered() || !ok {
-		expire = time.Now().UTC().Add(24 * time.Hour * 30)
-	}
+	u, _ := userFrom(ctx)
+	expire := time.Now().UTC().Add(24 * time.Hour * 30)
 	resp := subsonicLicense{
 		subsonicResponse: subOK(),
 	}
 	resp.License.Valid = expire.After(time.Now())
 	resp.License.Expires = expire.Format(subsonicTimeLayout)
+	resp.License.Email = u.Email
 	writeSubsonic(ctx, w, r, resp)
 }
 

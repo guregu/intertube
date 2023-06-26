@@ -277,3 +277,8 @@ privacy_title = "privacy policy"
 
 # ToS
 tos_title = "terms of service"
+
+# generic errors
+error = "error"
+error_no_user = "account does not exist"
+error_bad_password = "bad password"

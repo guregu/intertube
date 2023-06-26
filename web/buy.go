@@ -12,6 +12,11 @@ import (
 )
 
 func buyForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	if !UseStripe {
+		http.Error(w, "payment is disabled", http.StatusForbidden)
+		return
+	}
+
 	u, loggedIn := userFrom(ctx)
 	plans := tube.GetPlans()
 	prices, err := getStripePrices(plans)

@@ -461,105 +461,8 @@
 				} catch(err) {
 					console.log(err);
 				}
-
-				loadCache(function(ok) {
-					var cache = getCache(this.location);
-					if (!cache || !ok) {
-						initCache();
-						if (!!NEXT) {
-							fetchNext(NEXT, null, getCache(this.location));
-						} else {
-							// TODO fix
-							fetchNext(null, null, getCache(this.location));
-						}
-						return;
-					}
-					innerReplace("#playlist", true, cache);
-					reconcileSortDefault();
-					LOADINGPROG.textContent = "";
-				});
 			}
 			window.addEventListener("DOMContentLoaded", initPage);
-
-			function initCache() {
-				var docstr = new XMLSerializer().serializeToString(document);
-				var copy = new DOMParser().parseFromString(docstr, "text/html");
-				copy.lastMod = new Date();
-				setCache(this.location, copy);
-			}
-
-			function saveCache() {
-				localStorage.clear();
-
-				var pages = Object.keys(PAGE_CACHE);
-				var meta = {
-					lastMod: LASTMOD,
-					userID: USERID,
-					pages: pages
-				};
-
-				var ops = [];
-
-				caches.open(LASTMOD).then(function(cache) {
-					for (k of pages) {
-						var doc = PAGE_CACHE[k];
-						if (!doc instanceof HTMLDocument) {
-							console.log("skip save", doc);
-							continue;
-						}
-						var str = new XMLSerializer().serializeToString(doc);
-						// localStorage[k] = str;
-
-						cache.put(new Request(k), new Response(str)).then(function() {
-							console.log("cached", k);
-						});
-					}
-				});
-
-				// TODO: await on ops
-
-				localStorage["$meta"] = JSON.stringify(meta);
-			}
-
-			async function loadCache(after) {
-				var metaraw = localStorage["$meta"];
-				if (!metaraw) {
-					after(false);
-					return false;
-				}
-				var meta = JSON.parse(metaraw);
-				console.log("cache lastmod", meta.lastMod, LASTMOD);
-				if (LASTMOD > meta.lastMod || USERID != meta.userID) {
-					console.log("stale cache:", meta, LASTMOD, meta.userID, USERID);
-					localStorage.clear();
-					// TODO clear cache
-					caches.delete(meta.lastMod).then(function() {
-						console.log("deleted cache2", meta.lastMod);
-					})
-					after(false);
-					return false;
-				}
-				caches.open(LASTMOD).then(async function(cache) {
-					for (k of meta.pages) {
-						await cache.match(k).then(async function(resp) {
-							if (!resp) {
-								return;
-							}
-							var raw = await resp.text();
-							// var raw = localStorage[k];
-							if (!raw) {
-								console.log("missing", k);
-								return;
-							}
-							var doc = new DOMParser().parseFromString(raw, "text/html");
-							doc.href = k;
-							PAGE_CACHE[k] = doc;
-							console.log("loaded from cache: ", k);
-						})
-					}
-				}).then(after.bind(window, true));
-				return true;
-			}
 			
 			function fetchNext(next, path, cacheDoc) {
 				if (!path) {
@@ -575,7 +478,7 @@
 					// TODO: inaccurate, need len($.Tracks)
 					delete LOADINGPROG.dataset.ct;
 					synch();
-					saveCache();
+					//saveCache();
 					return;
 				}
 

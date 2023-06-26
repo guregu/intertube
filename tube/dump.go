@@ -11,6 +11,7 @@ import (
 
 	"github.com/karlseguin/ccache/v2"
 
+	"github.com/guregu/dynamo"
 	"github.com/guregu/intertube/storage"
 )
 
@@ -138,7 +139,7 @@ func RecreateDump(ctx context.Context, userID int, at time.Time) error {
 func (u User) SaveDump(ctx context.Context, d Dump) error {
 	// only save if we 'win' the race
 	err := u.UpdateLastDump(ctx, d.Time)
-	if IsCondCheckErr(err) {
+	if dynamo.IsCondCheckFailed(err) {
 		log.Println("dump is stale:", err)
 		// stale
 		return nil

@@ -81,7 +81,7 @@ func setResume(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := track.SetResume(ctx, secs, mod); err != nil {
-		if tube.IsCondCheckErr(err) {
+		if dynamo.IsCondCheckFailed(err) {
 			w.WriteHeader(http.StatusConflict)
 			return
 		}

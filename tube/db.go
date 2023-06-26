@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
@@ -43,6 +42,9 @@ func Init(region, prefix, endpoint string, debug bool) {
 			Endpoint:    &endpoint,
 			Credentials: credentials.NewStaticCredentials("dummy", "dummy", ""),
 		})
+		if region == "" {
+			region = "local"
+		}
 	}
 	if err != nil {
 		panic(err)
@@ -52,12 +54,6 @@ func Init(region, prefix, endpoint string, debug bool) {
 	}
 	if endpoint == "" && region == "" {
 		region = os.Getenv("AWS_REGION")
-	}
-	if endpoint != "" {
-		if region == "" {
-			region = "local"
-		}
-		cfg.Endpoint = &endpoint
 	}
 	if debug {
 		cfg.LogLevel = aws.LogLevel(aws.LogDebugWithHTTPBody)
@@ -108,13 +104,6 @@ func NextID(ctx context.Context, class string) (n int, err error) {
 	table := dynamoTable("Counters")
 	err = table.Update("ID", class).Add("Count", 1).Value(&ct)
 	return ct.Count, err
-}
-
-func IsCondCheckErr(err error) bool {
-	if ae, ok := err.(awserr.Error); ok && ae.Code() == "ConditionalCheckFailedException" {
-		return true
-	}
-	return false
 }
 
 func init() {

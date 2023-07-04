@@ -26,11 +26,6 @@ import (
 	"github.com/guregu/intertube/tube"
 )
 
-const (
-	stripePlanIDLittle = "prod_IcUzPWt5iyHHUg"
-	stripePriceLittle  = "price_1I1FzcKpetgr0YLEljmXzSVH"
-)
-
 var (
 	stripePublicKey string
 	stripeSigSecret string // for webhook
@@ -98,7 +93,7 @@ func stripeCheckout(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		email = stripe.String(u.Email)
 	}
 	var subparam *stripe.CheckoutSessionSubscriptionDataParams
-	if !u.TrialOver && u.TimeRemaining() > time.Hour*24*2 {
+	if !u.TrialOver && u.TimeRemaining() > (2*time.Hour*24)+(10*time.Minute) {
 		subparam = &stripe.CheckoutSessionSubscriptionDataParams{
 			TrialEnd: stripe.Int64(u.PlanExpire.UTC().Unix()),
 		}
@@ -114,7 +109,7 @@ func stripeCheckout(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		Customer:          customerID,
 
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			&stripe.CheckoutSessionLineItemParams{
+			{
 				Price:    stripe.String(price),
 				Quantity: stripe.Int64(1),
 			},

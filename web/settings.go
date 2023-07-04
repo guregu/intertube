@@ -9,6 +9,14 @@ import (
 	"github.com/guregu/intertube/tube"
 )
 
+type settingsFormData struct {
+	User         tube.User
+	Plan         tube.Plan
+	HasSub       bool
+	ErrorMsg     string
+	CacheEnabled bool
+}
+
 func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 	plan := tube.GetPlan(u.Plan)
@@ -23,13 +31,7 @@ func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		hasSub = cust.Subscriptions != nil && len(cust.Subscriptions.Data) > 0
 	}
 
-	data := struct {
-		User         tube.User
-		Plan         tube.Plan
-		HasSub       bool
-		ErrorMsg     string
-		CacheEnabled bool
-	}{
+	data := settingsFormData{
 		User:         u,
 		HasSub:       hasSub,
 		Plan:         plan,
@@ -53,16 +55,12 @@ func settings(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	hasSub := cust != nil && cust.Subscriptions != nil && len(cust.Subscriptions.Data) > 0
 
 	renderError := func(err error) {
-		data := struct {
-			User     tube.User
-			Plan     tube.Plan
-			HasSub   bool
-			ErrorMsg string
-		}{
-			User:     u,
-			Plan:     plan,
-			HasSub:   hasSub,
-			ErrorMsg: err.Error(),
+		data := settingsFormData{
+			User:         u,
+			Plan:         plan,
+			HasSub:       hasSub,
+			ErrorMsg:     err.Error(),
+			CacheEnabled: storage.IsCacheEnabled(),
 		}
 		if err := getTemplate(ctx, "settings").Execute(w, data); err != nil {
 			panic(err)

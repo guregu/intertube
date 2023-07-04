@@ -98,7 +98,7 @@ func stripeCheckout(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		email = stripe.String(u.Email)
 	}
 	var subparam *stripe.CheckoutSessionSubscriptionDataParams
-	if !u.TrialOver && u.TimeRemaining() > time.Hour*24 {
+	if !u.TrialOver && u.TimeRemaining() > time.Hour*24*2 {
 		subparam = &stripe.CheckoutSessionSubscriptionDataParams{
 			TrialEnd: stripe.Int64(u.PlanExpire.UTC().Unix()),
 		}

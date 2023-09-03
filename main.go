@@ -3,16 +3,18 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/guregu/intertube/event"
 	"github.com/guregu/intertube/storage"
 	"github.com/guregu/intertube/tube"
 	"github.com/guregu/intertube/web"
+	"github.com/kardianos/osext"
 )
 
 var (
@@ -41,9 +43,9 @@ func main() {
 			startLambda()
 		case "REFRESH":
 			web.Load()
-			event.StartLambda(mode)
+			startEventLambda(mode)
 		case "CHANGE":
-			event.StartLambda(mode)
+			startEventLambda(mode)
 		}
 		return
 	}
@@ -97,4 +99,22 @@ func main() {
 		panic(err)
 	}
 	closeWatch()
+}
+
+func loadDeploydate() time.Time {
+	here, err := osext.ExecutableFolder()
+	if err != nil {
+		panic(err)
+	}
+
+	f, err := os.Open(filepath.Join(here, "deploydate"))
+	if err != nil {
+		fmt.Println("deploydate load error:", err)
+		return time.Time{}
+	}
+	defer f.Close()
+
+	var date int64
+	fmt.Fscanf(f, "%d", &date)
+	return time.Unix(date, 0)
 }

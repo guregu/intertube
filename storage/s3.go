@@ -144,6 +144,7 @@ func newB2(region string, keyID, key string) *s3.S3 {
 		Endpoint:         aws.String(endpoint),
 		Credentials:      credentials.NewStaticCredentials(keyID, key, ""),
 		S3ForcePathStyle: aws.Bool(true),
+		Retryer:          Retryer{},
 	})))
 }
 
@@ -153,12 +154,14 @@ func newR2(accountID string, keyID, key string) *s3.S3 {
 		Region:      aws.String("auto"),
 		Endpoint:    aws.String(endpoint),
 		Credentials: credentials.NewStaticCredentials(keyID, key, ""),
+		Retryer:     Retryer{},
 	})))
 }
 
 func newS3(region, key, secret, endpoint string) *s3.S3 {
 	cfg := &aws.Config{
-		Region: aws.String(region),
+		Region:  aws.String(region),
+		Retryer: Retryer{},
 	}
 	if key != "" && secret != "" {
 		cfg.Credentials = credentials.NewStaticCredentials(key, secret, "")

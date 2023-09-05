@@ -6,8 +6,6 @@ import (
 
 func StartLambda(mode string) {
 	switch mode {
-	case "REFRESH":
-		lambda.Start(HandleRefresh)
 	case "CHANGE":
 		lambda.Start(handleChange)
 	}

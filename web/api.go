@@ -3,6 +3,7 @@ package web
 import (
 	"log"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/guregu/kami"
@@ -96,6 +97,28 @@ func init() {
 	kami.Get("/admin/", adminIndex)
 
 	kami.Post("/external/stripe", stripeWebhook)
+}
+
+func init() {
+	var dirty bool
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, kv := range info.Settings {
+			switch kv.Key {
+			case "vcs.time":
+				var err error
+				Deployed, err = time.Parse(time.RFC3339, kv.Value)
+				if err != nil {
+					panic(err)
+				}
+			case "vcs.modified":
+				dirty = kv.Value == "true"
+			}
+		}
+	}
+	if !dirty && !Deployed.IsZero() {
+		return
+	}
+	Deployed = time.Now().UTC()
 }
 
 func Load() {

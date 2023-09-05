@@ -4,18 +4,12 @@ import (
 	"context"
 	"net/http"
 	"sort"
-	"time"
 
 	"github.com/guregu/intertube/tube"
 )
 
 func syncForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
-
-	// TODO: reused in apiv0
-	if err := refreshB2Token(ctx, &u, 12*time.Hour); err != nil {
-		panic(err)
-	}
 
 	// test lol
 	tracks, err := u.GetTracks(ctx)
@@ -38,7 +32,7 @@ func syncForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			Size:    t.Size,
 			LastMod: t.LocalMod,
 			Path:    t.VirtualPath(),
-			URL:     b2DownloadURL(u, t),
+			URL:     presignTrackDL(u, t),
 		}
 		metadata = append(metadata, m)
 		index[m.ID] = m

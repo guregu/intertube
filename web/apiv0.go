@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/guregu/dynamo"
 	"github.com/guregu/kami"
@@ -64,10 +63,6 @@ func loginV0(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 func listTracksV0(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 
-	if err := refreshB2Token(ctx, &u, 12*time.Hour); err != nil {
-		panic(err)
-	}
-
 	var startFrom dynamo.PagingKey
 	if start := r.URL.Query().Get("start"); start != "" {
 		startFrom, _ = dynamo.MarshalItem(struct {
@@ -90,7 +85,7 @@ func listTracksV0(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 	data.Tracks = tracks
 	for i, t := range data.Tracks {
-		t.DL = b2DownloadURL(u, t)
+		t.DL = presignTrackDL(u, t)
 		data.Tracks[i] = t
 	}
 	if next != nil {

@@ -65,21 +65,11 @@ func copyUploadToFiles(ctx context.Context, dstPath string, fileID string, f tub
 	return storage.FilesBucket.CopyFromBucket(dstPath, storage.UploadsBucket, f.Path(), f.Type, disp)
 }
 
-func createB2Token(ctx context.Context, userID int) (token string, expires time.Time, err error) {
-	bucket, err := b2Client.Bucket(ctx, b2BucketName)
+func presignTrackDL(_ tube.User, track tube.Track) string {
+	href, err := storage.FilesBucket.PresignGet(track.B2Key(), fileDownloadTTL*2)
 	if err != nil {
-		return "", time.Time{}, err
+		panic(err)
 	}
-	pathname := fmt.Sprintf(b2UserDirFormat, userID)
-	token, err = bucket.AuthToken(ctx, pathname, time.Hour*24)
-	expires = time.Now().UTC().Add(time.Hour * 23)
-
-	return token, expires, err
-}
-
-// TODO: get rid of this
-func b2DownloadURL(u tube.User, track tube.Track) string {
-	href := fmt.Sprintf(cfFileURL, track.B2Key(), u.B2Token)
 	return href
 }
 

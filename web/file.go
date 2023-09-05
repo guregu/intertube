@@ -61,22 +61,6 @@ func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, href, http.StatusTemporaryRedirect)
 }
 
-func refreshB2Token(ctx context.Context, u *tube.User, fudge time.Duration) error {
-	now := time.Now().UTC().Add(-fudge)
-	if u.B2Token != "" && now.Before(u.B2Expire) {
-		return nil
-	}
-
-	token, expire, err := createB2Token(ctx, u.ID)
-	if err != nil {
-		return err
-	}
-	if err := u.SetB2Token(ctx, token, expire); err != nil {
-		return err
-	}
-	return nil
-}
-
 func uploadStart(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 	name := r.FormValue("name")

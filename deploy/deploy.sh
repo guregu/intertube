@@ -4,7 +4,7 @@
 APP_NAME=intertube
 S3_REGION=us-west-2
 S3_BUCKET=deploy.inter.tube
-CIRCLE_BUILD_NUM=555
+CIRCLE_BUILD_NUM=`date +%s`
 
 TAR_NAME=${APP_NAME}.zip
 

@@ -29,26 +29,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
-		// TODO: split these into separate binaries maybe
-		mode := os.Getenv("MODE")
-		log.Println("Lambda mode", mode)
-		switch mode {
-		case "WEB":
-			// web server
-			deployed := loadDeploydate()
-			web.Deployed = deployed
-			log.Println("deploy time:", deployed)
-			web.Load()
-			startLambda()
-		case "REFRESH":
-			web.Load()
-			startEventLambda(mode)
-		case "CHANGE":
-			startEventLambda(mode)
-		}
-		return
-	}
 
 	if *cfgFlag != "" {
 		cfg, err := readConfig(*cfgFlag)
@@ -71,6 +51,27 @@ func main() {
 			CFAccountID:     cfg.Storage.CloudflareAccount,
 		}
 		storage.Init(storageCfg)
+	}
+
+	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
+		// TODO: split these into separate binaries maybe
+		mode := os.Getenv("MODE")
+		log.Println("Lambda mode", mode)
+		switch mode {
+		case "WEB":
+			// web server
+			deployed := loadDeploydate()
+			web.Deployed = deployed
+			log.Println("deploy time:", deployed)
+			web.Load()
+			startLambda()
+		case "REFRESH":
+			web.Load()
+			startEventLambda(mode)
+		case "CHANGE":
+			startEventLambda(mode)
+		}
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

@@ -376,7 +376,7 @@
 					RUNNING.delete(job);
 					work();
 					incStat("failed");
-					console.log("job failed", job);
+					console.log("job failed", job.pseudoID);
 				}
 			}
 			xhr.onerror = function() {
@@ -404,7 +404,7 @@
 					setMetadata(fileID, JSON.parse(xhr.response));
 					RUNNING.delete(job);
 					work();
-					console.log("job success", job);
+					console.log("job success", job.pseudoID);
 					incStat("success");
 				} else {
 					// setProgress(fileID, -1);
@@ -417,7 +417,7 @@
 							setError(fileID, "Failed after retrying " + RETRY_MAX + " times: " + xhr.response);
 							RUNNING.delete(job);
 							work();
-							console.log("job failed2", job);
+							console.log("job failed2", job.pseudoID);
 							incStat("failed");
 							return;
 						}

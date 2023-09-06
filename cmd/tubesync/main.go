@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
@@ -16,32 +16,45 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/containerd/console"
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/net/publicsuffix"
+	"golang.org/x/term"
 
 	"github.com/guregu/intertube/tube"
 )
 
 const (
-	version = "0.0.5"
-	host    = "https://inter.tube"
+	version = "0.1.0"
 )
 
 var client *http.Client
-var term = console.Current()
 var rootPath string
-var parallel = 10
+
+var (
+	parallel = flag.Int("parallel", 10, "number of simultaneous downloads")
+	host     = flag.String("host", "https://inter.tube", "host URL, change for custom deployments")
+	workDir  = flag.String("path", "", "path to music library directory, leave blank (default) for current directory")
+	help     = flag.Bool("help", false, "show this help message")
+)
 
 var ErrSkip = fmt.Errorf("skipped")
 
 func main() {
-	exe, err := os.Executable()
-	maybeDie(err)
-	rootPath = filepath.Dir(exe)
+	flag.Parse()
+	if *help {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	if *workDir == "" {
+		exe, err := os.Executable()
+		maybeDie(err)
+		rootPath = filepath.Dir(exe)
+	} else {
+		rootPath = *workDir
+	}
 
 	fmt.Println("welcome to tubesync version", version)
-	fmt.Println("   for https://inter.tube")
+	fmt.Println("   for", *host)
 	fmt.Println("working directory:", rootPath)
 	var email, pass string
 	fmt.Print("email (blank to quit): ")
@@ -52,7 +65,7 @@ func main() {
 	}
 	// fmt.Println()
 	fmt.Print("password (hidden): ")
-	pwraw, err := terminal.ReadPassword(int(syscall.Stdin))
+	pwraw, err := term.ReadPassword(int(syscall.Stdin))
 	maybeDie(err)
 	pass = string(pwraw)
 	fmt.Println("\nlogging in as", email, "...")
@@ -61,8 +74,9 @@ func main() {
 	maybeDie(err)
 	fmt.Println("login successful")
 
-	fmt.Println("getting track metadata... (might take a while)")
+	fmt.Print("getting track metadata (might take a while)")
 	tracks, err := getTracks()
+	fmt.Println()
 	maybeDie(err)
 	fmt.Println("got", len(tracks), "tracks")
 	fmt.Println("syncing...")
@@ -71,9 +85,9 @@ func main() {
 	progress := new(int64)
 	errct := new(int64)
 
-	dlchan := make(chan tube.Track, parallel)
+	dlchan := make(chan tube.Track, *parallel)
 	var wg sync.WaitGroup
-	for n := 0; n < parallel; n++ {
+	for n := 0; n < *parallel; n++ {
 		wg.Add(1)
 		go func() {
 			for track := range dlchan {
@@ -151,6 +165,7 @@ func getTracks() (tube.Tracks, error) {
 		if resp.Next == "" {
 			break
 		}
+		fmt.Print(".")
 	}
 	return tracks, nil
 }
@@ -197,7 +212,7 @@ func download(track tube.Track) error {
 
 	dlURL := track.DL
 	if dlURL == "" {
-		dlURL = host + href
+		dlURL = *host + href
 	}
 	resp, err := client.Get(dlURL)
 	if err != nil {
@@ -217,7 +232,7 @@ func download(track tube.Track) error {
 }
 
 func post(path string, in interface{}, out interface{}) error {
-	href := host + path
+	href := *host + path
 
 	var inRdr io.Reader
 	if in != nil {
@@ -234,7 +249,7 @@ func post(path string, in interface{}, out interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -254,7 +269,7 @@ func post(path string, in interface{}, out interface{}) error {
 }
 
 func get(path string, out interface{}) error {
-	href := host + path
+	href := *host + path
 
 	resp, err := client.Get(href)
 	if err != nil {
@@ -262,7 +277,7 @@ func get(path string, out interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

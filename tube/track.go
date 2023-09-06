@@ -210,11 +210,7 @@ func (t *Track) RefreshSortID(ctx context.Context) error {
 		Value(t)
 }
 
-func (t Track) S3Key() string {
-	return fmt.Sprintf("tracks/%s%s", t.ID, path.Ext(t.Filename))
-}
-
-func (t Track) B2Key() string {
+func (t Track) StorageKey() string {
 	return fmt.Sprintf("u/tracks/%d/%s%s", t.UserID, t.ID, path.Ext(t.Filename))
 }
 
@@ -247,7 +243,7 @@ func (t Track) SortKey() string {
 }
 
 func (t Track) FileURL() string {
-	return fmt.Sprintf("/dl/%s", t.S3Key())
+	return fmt.Sprintf("/dl/tracks/%s%s", t.ID, path.Ext(t.Filename))
 }
 
 // VirtualPath returns an ideal path as synchronized to a filesystem

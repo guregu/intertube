@@ -64,7 +64,6 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	if err != nil {
 		return tube.Track{}, err
 	}
-	_ = fmeta
 
 	r, err := storage.UploadsBucket.Get(key)
 	if err != nil {
@@ -156,7 +155,7 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	track.Disc, track.Discs = tags.Disc()
 	track.ApplyInfo(trackInfo)
 
-	err = copyUploadToFiles(ctx, track.B2Key(), b2ID, fmeta)
+	err = copyUploadToFiles(ctx, track.StorageKey(), b2ID, fmeta)
 	if err != nil {
 		return tube.Track{}, err
 	}

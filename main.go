@@ -57,9 +57,7 @@ func main() {
 		switch mode {
 		case "WEB":
 			// web server
-			deployed := loadDeploydate()
-			web.Deployed = deployed
-			log.Println("deploy time:", deployed)
+			log.Println("deploy time:", web.Deployed)
 			web.Load()
 			startLambda()
 		case "CHANGE":
@@ -82,7 +80,7 @@ func main() {
 	// os.Exit(0)
 
 	// local server for dev
-	log.Println("deploydate:", loadDeploydate())
+	log.Println("deploydate:", web.Deployed)
 	web.DebugMode = true
 	web.Load()
 
@@ -92,8 +90,4 @@ func main() {
 		panic(err)
 	}
 	closeWatch()
-}
-
-func loadDeploydate() time.Time {
-	return web.Deployed
 }

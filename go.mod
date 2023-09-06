@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-lambda-go v1.40.0
 	github.com/aws/aws-sdk-go v1.44.289
 	github.com/cloudflare/cloudflare-go v0.65.0
-	github.com/containerd/console v1.0.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
@@ -19,7 +18,6 @@ require (
 	github.com/hajimehoshi/go-mp3 v0.3.1
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/karlseguin/ccache/v2 v2.0.7
-	github.com/kurin/blazer v0.5.3
 	github.com/mewkiz/flac v1.0.6
 	github.com/nicksnyder/go-i18n/v2 v2.0.3
 	github.com/pelletier/go-toml/v2 v2.0.8
@@ -41,10 +39,8 @@ require (
 	github.com/icza/bitio v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mewkiz/pkg v0.0.0-20190919212034-518ade7978e2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/zenazn/goji v1.0.1 // indirect
 	golang.org/x/sys v0.9.0 // indirect
-	golang.org/x/term v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 )

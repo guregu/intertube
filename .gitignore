@@ -9,3 +9,4 @@ cmd/tubesync/tubesync
 deploydate
 */node_modules
 config.toml
+.DS_Store

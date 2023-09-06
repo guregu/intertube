@@ -54,7 +54,7 @@ func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 		panic(err)
 	}
 
-	href, err := storage.FilesBucket.PresignGet(f.B2Key(), fileDownloadTTL)
+	href, err := storage.FilesBucket.PresignGet(f.StorageKey(), fileDownloadTTL)
 	if err != nil {
 		panic(err)
 	}
@@ -272,4 +272,32 @@ func encodeContentDisp(filename string) string {
 	escaped := url.QueryEscape(filename)
 	escaped = strings.ReplaceAll(escaped, "+", "%20")
 	return "attachment; filename=\"file" + ext + "\"; filename*=UTF-8''" + escaped
+}
+
+func copyUploadToFiles(ctx context.Context, dstPath string, fileID string, f tube.File) error {
+	disp := "attachment; filename*=UTF-8''" + escapeFilename(f.Name)
+	return storage.FilesBucket.CopyFromBucket(dstPath, storage.UploadsBucket, f.Path(), f.Type, disp)
+}
+
+func presignTrackDL(_ tube.User, track tube.Track) string {
+	href, err := storage.FilesBucket.PresignGet(track.StorageKey(), fileDownloadTTL*2)
+	if err != nil {
+		panic(err)
+	}
+	return href
+}
+
+func escapeFilename(name string) string {
+	const illegal = `<>@,;:\"/+[]?={} 	`
+	name = strings.Map(func(r rune) rune {
+		if strings.ContainsRune(illegal, r) {
+			return '-'
+		}
+		return r
+	}, name)
+	name = url.PathEscape(name)
+	if len(name) == 0 {
+		return "file"
+	}
+	return name
 }

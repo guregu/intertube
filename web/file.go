@@ -18,25 +18,13 @@ import (
 )
 
 const (
-	cfAuthURL = "https://intertube.download/auth?token=%s&dl=%s" // token, track.B2Path
-	cfFileURL = "https://intertube.download/dl/%s?token=%s"      // track.B2Path, token
-
-	maxFileSize = 500 * 1000 * 1000 // 500MB
+	maxFileSize = 1024 * 1024 * 1024 // 1GB
 
 	fileDownloadTTL      = 1 * time.Hour
 	thumbnailDownloadTTL = 1 * time.Hour
 	uploadTTL            = 4 * time.Hour
 )
 
-// intertube.download/auth?token=XYZ&r={home/dl}
-//
-//	set cookie, redir to inter.tube
-//
-// intertube.download/file/...
-//
-//	check cookie
-//
-// https://intertube.download/auth?token=B2_TOKEN?dl=USERID/FILENAME
 func downloadTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 
@@ -107,10 +95,6 @@ func uploadStart(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("Tube-Upload-ID", zf.ID)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	var data = struct {
 		ID    string
 		CD    string
@@ -122,9 +106,8 @@ func uploadStart(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		URL: url,
 	}
 
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
+	w.Header().Set("Tube-Upload-ID", zf.ID)
+	renderJSON(w, data, http.StatusOK)
 }
 
 func uploadStart2(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -154,7 +137,7 @@ func uploadStart2(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		}
 		if f.Size > maxFileSize {
 			w.WriteHeader(400)
-			fmt.Fprintln(w, "file too big. max size is "+strconv.FormatInt(maxFileSize/1000/1000, 10)+"MB")
+			fmt.Fprintln(w, "file too big. max size is "+strconv.FormatInt(maxFileSize/1024/1024, 10)+"MB")
 			return
 		}
 		totalsize += f.Size
@@ -185,20 +168,14 @@ func uploadStart2(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 	if quota := u.CalcQuota(); quota != 0 {
 		if u.Usage+totalsize > quota {
-			w.WriteHeader(400)
-			fmt.Fprintln(w, "would exceed upload quota")
+			renderText(w, "file would exceed upload quota", http.StatusBadRequest)
 			return
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Tube-Upload-Usage", strconv.FormatInt(u.Usage, 10))
 	w.Header().Set("Tube-Upload-Quota", strconv.FormatInt(u.CalcQuota(), 10))
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(output); err != nil {
-		panic(err)
-	}
+	renderJSON(w, output, http.StatusOK)
 }
 
 func uploadFinish(ctx context.Context, w http.ResponseWriter, r *http.Request) {

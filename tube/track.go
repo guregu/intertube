@@ -486,7 +486,7 @@ type Picture struct {
 	Desc string
 }
 
-func (p Picture) S3Key() string {
+func (p Picture) StorageKey() string {
 	return fmt.Sprintf("pic/%s.%s", p.ID, p.Ext)
 }
 

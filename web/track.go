@@ -128,9 +128,7 @@ func editTrackForm(ctx context.Context, w http.ResponseWriter, r *http.Request) 
 		Multi:   multi,
 		LastMod: u.LastMod.UnixNano(),
 	}
-	if err := getTemplate(ctx, "track-edit").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "track-edit", data, http.StatusOK)
 }
 
 func editTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -167,9 +165,7 @@ func editTrack(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			LastMod:  u.LastMod.UnixNano(),
 			ErrorMsg: err.Error(),
 		}
-		if err := getTemplate(ctx, "track-edit").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "track-edit", data, http.StatusOK)
 	}
 	_ = renderError
 

@@ -128,10 +128,7 @@ func stripeCheckout(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		SessionID: resp.ID,
 	}
 
-	r.Header.Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
+	renderJSON(w, data, http.StatusOK)
 }
 
 func stripeCheckoutResult(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -162,9 +159,7 @@ func stripeCheckoutResult(ctx context.Context, w http.ResponseWriter, r *http.Re
 				User:   u,
 				Status: string(sesh.PaymentStatus),
 			}
-			if err := getTemplate(ctx, "checkout").Execute(w, data); err != nil {
-				panic(err)
-			}
+			renderTemplate(ctx, w, "checkout", data, http.StatusOK)
 			return
 		}
 	case stripe.CheckoutSessionPaymentStatusUnpaid:
@@ -176,9 +171,7 @@ func stripeCheckoutResult(ctx context.Context, w http.ResponseWriter, r *http.Re
 		}{
 			Status: string(sesh.PaymentStatus),
 		}
-		if err := getTemplate(ctx, "checkout-unpaid").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "checkout-unpaid", data, http.StatusOK)
 		return
 	}
 

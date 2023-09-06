@@ -318,19 +318,19 @@ func (lib *Library) Albums(org organize) []*albumInfo {
 		})
 	case "newest":
 		order.By(
-			func(a, b *albumInfo) int { return invert(timecmp(a.date, b.date)) },
+			func(a, b *albumInfo) int { return invert(a.date.Compare(b.date)) },
 		).Sort(albums)
 	case "highest":
 		// TODO: ???
 	case "frequent":
 		order.By(
 			func(a, b *albumInfo) int { return invert(a.plays - b.plays) },
-			func(a, b *albumInfo) int { return invert(timecmp(a.date, b.date)) },
+			func(a, b *albumInfo) int { return invert(a.date.Compare(b.date)) },
 			func(a, b *albumInfo) int { return strings.Compare(a.name, b.name) },
 		).Sort(albums)
 	case "recent":
 		order.By(
-			func(a, b *albumInfo) int { return invert(timecmp(a.played, b.played)) },
+			func(a, b *albumInfo) int { return invert(a.played.Compare(b.played)) },
 			func(a, b *albumInfo) int { return strings.Compare(a.name, b.name) },
 		).Sort(albums)
 	case "alphabeticalByName":

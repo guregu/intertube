@@ -25,6 +25,7 @@ type Plan struct {
 	PriceID string
 }
 
+// TODO: make configurable
 var plans = map[PlanKind]Plan{
 	PlanKindNone: {
 		Kind:  PlanKindNone,

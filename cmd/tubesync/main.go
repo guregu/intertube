@@ -55,22 +55,22 @@ func main() {
 
 	fmt.Println("welcome to tubesync version", version)
 	fmt.Println("   for", *host)
-	fmt.Println("working directory:", rootPath)
-	var email, pass string
+	fmt.Println("library directory:", rootPath)
+
+	var email string
 	fmt.Print("email (blank to quit): ")
 	fmt.Scanln(&email)
 	if email == "" {
 		fmt.Println("email is blank, bye")
 		os.Exit(1)
 	}
-	// fmt.Println()
-	fmt.Print("password (hidden): ")
-	pwraw, err := term.ReadPassword(int(syscall.Stdin))
-	maybeDie(err)
-	pass = string(pwraw)
-	fmt.Println("\nlogging in as", email, "...")
 
-	err = login(email, pass)
+	fmt.Print("password (hidden): ")
+	password, err := term.ReadPassword(int(syscall.Stdin))
+	maybeDie(err)
+
+	fmt.Println("\nlogging in as", email, "...")
+	err = login(email, string(password))
 	maybeDie(err)
 	fmt.Println("login successful")
 

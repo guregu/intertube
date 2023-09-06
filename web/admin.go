@@ -17,10 +17,6 @@ func adminIndex(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	sort.Slice(users, func(i, j int) bool {
 		a, b := users[i], users[j]
 		return a.LastMod.After(b.LastMod)
-		if a.Usage == b.Usage {
-			return a.ID < b.ID
-		}
-		return a.Usage > b.Usage
 	})
 
 	data := struct {
@@ -29,7 +25,5 @@ func adminIndex(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		Users: users,
 	}
 
-	if err := getTemplate(ctx, "admin").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "admin", data, http.StatusOK)
 }

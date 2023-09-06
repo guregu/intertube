@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/guregu/intertube/email"
 	mailer "github.com/guregu/intertube/email"
 	"github.com/guregu/intertube/tube"
 )
@@ -106,16 +105,14 @@ func loginForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data = loginFormData{
-		MailEnabled: email.IsEnabled(),
+		MailEnabled: mailer.IsEnabled(),
 	}
 
 	if rawJump := r.URL.Query().Get("r"); rawJump != "" {
 		data.Jump, _ = decodeRedirect(rawJump)
 	}
 
-	if err := getTemplate(ctx, "login").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "login", data, http.StatusOK)
 }
 
 // TODO: friendly error messages
@@ -136,12 +133,10 @@ func login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		data := loginFormData{
 			Email:       emailaddr,
 			Jump:        jump,
-			MailEnabled: email.IsEnabled(),
+			MailEnabled: mailer.IsEnabled(),
 			ErrorMsg:    msg,
 		}
-		if err := getTemplate(ctx, "login").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "login", data, http.StatusOK)
 	}
 
 	user, err := tube.GetUserByEmail(ctx, emailaddr)
@@ -182,9 +177,7 @@ func registerForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}{
 		Invite: r.URL.Query().Get("invite"),
 	}
-	if err := getTemplate(ctx, "register").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "register", data, http.StatusOK)
 }
 
 func register(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -204,9 +197,7 @@ func register(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			// Invite:   secret,
 			ErrorMsg: err.Error(),
 		}
-		if err := getTemplate(ctx, "register").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "register", data, http.StatusOK)
 	}
 
 	if _, err := mail.ParseAddress(email); err != nil {
@@ -268,9 +259,7 @@ func forgotForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var data = struct {
 		ErrorMsg string
 	}{}
-	if err := getTemplate(ctx, "forgot").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "forgot", data, http.StatusOK)
 }
 
 func forgot(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -282,9 +271,7 @@ func forgot(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		}{
 			ErrorMsg: err.Error(),
 		}
-		if err := getTemplate(ctx, "forgot").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "forgot", data, http.StatusOK)
 	}
 
 	u, err := tube.GetUserByEmail(ctx, email)
@@ -319,9 +306,7 @@ func forgot(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}{
 		Email: email,
 	}
-	if err := getTemplate(ctx, "forgot-sent").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "forgot-sent", data, http.StatusOK)
 }
 
 func recoverForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -348,9 +333,7 @@ func recoverForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		Email:  u.Email,
 	}
 
-	if err := getTemplate(ctx, "recover").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "recover", data, http.StatusOK)
 }
 
 func doRecover(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -372,9 +355,7 @@ func doRecover(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			UserID:   userID,
 			ErrorMsg: err.Error(),
 		}
-		if err := getTemplate(ctx, "recover").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "recover", data, http.StatusOK)
 	}
 
 	u, err := tube.GetUser(ctx, userID)
@@ -437,7 +418,7 @@ func expiredAuthCookies() []*http.Cookie {
 		domain = ""
 	}
 	return []*http.Cookie{
-		&http.Cookie{
+		{
 			Name:     sessionCookie,
 			Domain:   "." + domain,
 			Path:     "/",
@@ -446,7 +427,8 @@ func expiredAuthCookies() []*http.Cookie {
 			SameSite: http.SameSiteLaxMode,
 			HttpOnly: true,
 			Secure:   !DebugMode,
-		}, &http.Cookie{
+		},
+		{
 			Name:     sessionCookie,
 			Domain:   domain,
 			Path:     "/",
@@ -459,6 +441,7 @@ func expiredAuthCookies() []*http.Cookie {
 	}
 }
 
+// TODO: don't use this if not behind load balancer
 func ipAddress(r *http.Request) string {
 	return r.Header.Get("X-Forwarded-For")
 }

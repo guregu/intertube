@@ -5,11 +5,8 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/guregu/kami"
-	"github.com/posener/order"
 
 	"github.com/guregu/intertube/tube"
 )
@@ -132,15 +129,11 @@ func showMusic(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inline {
-		if err := getTemplate(ctx, view).Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, view, data, http.StatusOK)
 		return
 	}
 
-	if err := getTemplate(ctx, "music").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "music", data, http.StatusOK)
 }
 
 // TODO: group by picture ID
@@ -237,12 +230,13 @@ func sortTracks(tracks []tube.Track) {
 		// 	return true
 		// }
 		if !a.Date.IsZero() && !b.Date.IsZero() {
-			a.Date.Before(b.Date)
+			return a.Date.Before(b.Date)
 		}
 		return a.ID < b.ID
 	})
 }
 
+/*
 type sortedTracks struct {
 	Asc  tube.Tracks
 	Desc tube.Tracks
@@ -282,12 +276,12 @@ func trackSortings(tracks tube.Tracks) map[string]sortedTracks {
 		desc := make([]tube.Track, len(tracks))
 		copy(desc, tracks)
 		order.By(append([]interface{}{
-			func(a, b tube.Track) int { return timecmp(a.LastPlayed, b.LastPlayed) },
+			func(a, b tube.Track) int { return a.LastPlayed.Compare(b.LastPlayed) },
 			func(a, b tube.Track) int { return strings.Compare(a.AnyArtist(), b.AnyArtist()) },
 			func(a, b tube.Track) int { return strings.Compare(a.Info.Album, b.Info.Album) },
 		}, commonCond...)...).Sort(asc)
 		order.By(append([]interface{}{
-			func(a, b tube.Track) int { return invert(timecmp(a.LastPlayed, b.LastPlayed)) },
+			func(a, b tube.Track) int { return invert(a.LastPlayed.Compare(b.LastPlayed)) },
 			func(a, b tube.Track) int { return strings.Compare(a.AnyArtist(), b.AnyArtist()) },
 			func(a, b tube.Track) int { return strings.Compare(a.Info.Album, b.Info.Album) },
 		}, commonCond...)...).Sort(desc)
@@ -326,11 +320,11 @@ func trackSortings(tracks tube.Tracks) map[string]sortedTracks {
 		desc := make([]tube.Track, len(tracks))
 		copy(desc, tracks)
 		order.By(
-			func(a, b tube.Track) int { return timecmp(a.Date, b.Date) },
+			func(a, b tube.Track) int { return a.Date.Compare(b.Date) },
 			func(a, b tube.Track) int { return strings.Compare(a.ID, b.ID) },
 		).Sort(asc)
 		order.By(
-			func(a, b tube.Track) int { return invert(timecmp(a.Date, b.Date)) },
+			func(a, b tube.Track) int { return invert(a.Date.Compare(b.Date)) },
 			func(a, b tube.Track) int { return strings.Compare(a.ID, b.ID) },
 		).Sort(desc)
 		sorted["added"] = sortedTracks{
@@ -359,17 +353,8 @@ func trackSortings(tracks tube.Tracks) map[string]sortedTracks {
 
 	return sorted
 }
+*/
 
 func invert(n int) int {
 	return -n
-}
-
-func timecmp(a, b time.Time) int {
-	if a.Equal(b) {
-		return 0
-	}
-	if a.Before(b) {
-		return -1
-	}
-	return 1
 }

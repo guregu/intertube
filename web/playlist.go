@@ -39,9 +39,7 @@ func createPlaylistForm(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		page = "playlist_tracks"
 	}
 
-	if err := getTemplate(ctx, page).Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, page, data, http.StatusOK)
 }
 
 /*

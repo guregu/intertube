@@ -28,7 +28,7 @@ const (
 )
 
 func init() {
-	add := func(path string, h interface{}) {
+	add := func(path string, h any) {
 		href := subsonicAPIPrefix + path + ".view"
 		kami.Get(href, h)
 		kami.Post(href, h)
@@ -308,26 +308,25 @@ func subsonicGetNowPlaying(ctx context.Context, w http.ResponseWriter, r *http.R
 	writeSubsonic(ctx, w, r, subOK())
 }
 
-func writeSubsonic(ctx context.Context, w http.ResponseWriter, r *http.Request, resp interface{}) {
+func writeSubsonic(ctx context.Context, w http.ResponseWriter, r *http.Request, resp any) {
 	f := formatFrom(ctx)
 	switch f {
 	case "json":
 		w.Header().Set("Content-Type", "application/json")
 
 		wrap := struct {
-			Resp interface{} `json:"subsonic-response"`
+			Resp any `json:"subsonic-response"`
 		}{
 			Resp: resp,
 		}
+
 		if DebugMode {
-			fmt.Println(">>>>>>>>>>>>>>> "+r.URL.EscapedPath(), " ? ", r.URL.Query().Encode())
+			fmt.Println("\n>>>>>>>>>>>>>>> "+r.URL.EscapedPath(), " ? ", r.URL.Query().Encode())
 			raw, err := json.Marshal(wrap)
-			fmt.Println("=================\n"+string(raw)+"\n~~~~~~~err", err, "~~~~~~~\n")
+			fmt.Println("=================\n"+string(raw)+"\n~~~~~~~err", err, "~~~~~~~")
 		}
 
-		if err := json.NewEncoder(w).Encode(wrap); err != nil {
-			panic(err)
-		}
+		renderJSON(w, wrap, http.StatusOK)
 	case "jsonp":
 		w.Header().Set("Content-Type", "application/javascript")
 		cb := r.FormValue("callback")
@@ -338,7 +337,7 @@ func writeSubsonic(ctx context.Context, w http.ResponseWriter, r *http.Request, 
 		}
 
 		wrap := struct {
-			Resp interface{} `json:"subsonic-response"`
+			Resp any `json:"subsonic-response"`
 		}{
 			Resp: resp,
 		}
@@ -351,17 +350,13 @@ func writeSubsonic(ctx context.Context, w http.ResponseWriter, r *http.Request, 
 		fmt.Fprint(w, string(js))
 		fmt.Fprint(w, ");")
 	case "xml":
-		w.Header().Set("Content-Type", "text/xml")
-		fmt.Fprint(w, xml.Header)
-
-		raw, err := xml.MarshalIndent(resp, "  ", "	")
-		if err != nil {
-			panic(err)
-		}
 		if DebugMode {
-			fmt.Println(">>>>>>>>>>>>>>> "+r.URL.EscapedPath(), " ? ", r.URL.Query().Encode())
-			fmt.Println("=================\n" + string(raw) + "\n~~~~~~~~~~~~~~~~~\n")
+			raw, err := xml.MarshalIndent(resp, "  ", "	")
+			fmt.Println("\n>>>>>>>>>>>>>>> "+r.URL.EscapedPath(), " ? ", r.URL.Query().Encode())
+			fmt.Println("=================\n"+string(raw)+"\n~~~~~~~~ err:", err, "~~~~")
 		}
+
+		renderXML(w, resp, http.StatusOK)
 
 		if err := xml.NewEncoder(w).Encode(resp); err != nil {
 			panic(err)

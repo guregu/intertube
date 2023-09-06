@@ -64,7 +64,7 @@
 							<td>{{tr "cover"}}</td>
 							<td>
 								{{if $.Track.Picture.ID}}
-									<img class="album-cover" alt="{{$.Track.Picture.Desc}}" src="{{$.Track.Picture.S3Key | sign}}">
+									<img class="album-cover" alt="{{$.Track.Picture.Desc}}" src="{{$.Track.Picture.StorageKey | sign}}">
 								{{else}}
 									{{tr "none"}}
 								{{end}}

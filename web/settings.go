@@ -37,9 +37,7 @@ func settingsForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		Plan:         plan,
 		CacheEnabled: storage.IsCacheEnabled(),
 	}
-	if err := getTemplate(ctx, "settings").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "settings", data, http.StatusOK)
 }
 
 func settings(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -62,9 +60,7 @@ func settings(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			ErrorMsg:     err.Error(),
 			CacheEnabled: storage.IsCacheEnabled(),
 		}
-		if err := getTemplate(ctx, "settings").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "settings", data, http.StatusOK)
 	}
 
 	email := r.FormValue("email")
@@ -116,9 +112,7 @@ func changePasswordForm(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	}{
 		User: u,
 	}
-	if err := getTemplate(ctx, "settings-password").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "settings-password", data, http.StatusOK)
 }
 
 func changePassword(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -133,9 +127,7 @@ func changePassword(ctx context.Context, w http.ResponseWriter, r *http.Request)
 			User:     u,
 			ErrorMsg: err.Error(),
 		}
-		if err := getTemplate(ctx, "settings-password").Execute(w, data); err != nil {
-			panic(err)
-		}
+		renderTemplate(ctx, w, "settings-password", data, http.StatusOK)
 	}
 
 	oldpw := r.FormValue("old-password")
@@ -176,7 +168,5 @@ func changePassword(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		User:    u,
 		Success: true,
 	}
-	if err := getTemplate(ctx, "settings-password").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "settings-password", data, http.StatusOK)
 }

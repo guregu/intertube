@@ -25,8 +25,6 @@ func discover(ctx context.Context, w http.ResponseWriter, r *http.Request) conte
 	return ctx
 }
 
-var serverStartTime = time.Now().UTC()
-
 func cacheHeaders(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
 	w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 	// w.Header().Set("Cache-Control", "no-cache, must-revalidate")

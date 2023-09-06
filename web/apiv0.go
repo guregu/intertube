@@ -92,8 +92,5 @@ func listTracksV0(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		data.Next = *next["ID"].S
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
+	renderJSON(w, data, http.StatusOK)
 }

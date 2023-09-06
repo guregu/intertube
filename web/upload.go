@@ -8,9 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	// "github.com/aws/aws-lambda-go/events"
 	// "github.com/aws/aws-lambda-go/lambda"
@@ -52,9 +50,7 @@ func uploadForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		User:  u,
 		Dupes: dupes,
 	}
-	if err := getTemplate(ctx, "upload").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "upload", data, http.StatusOK)
 }
 
 func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) (tube.Track, error) {
@@ -181,7 +177,7 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 var replacementChar = "�"
 
 func savePic(data []byte, ext string, mimetype string, desc string) (tube.Picture, error) {
-	id, err := sumBytes(data)
+	id, err := sha3Sum(data)
 	if err != nil {
 		return tube.Picture{}, err
 	}
@@ -191,27 +187,15 @@ func savePic(data []byte, ext string, mimetype string, desc string) (tube.Pictur
 		Type: mimetype,
 		Desc: desc,
 	}
-	err = storage.FilesBucket.Put(mimetype, pic.S3Key(), bytes.NewReader(data))
+	err = storage.FilesBucket.Put(mimetype, pic.StorageKey(), bytes.NewReader(data))
 	return pic, err
 }
 
 // for images
-func sumBytes(b []byte) (string, error) {
+func sha3Sum(b []byte) (string, error) {
 	sum := sha3.Sum224(b)
 	str := base64.RawURLEncoding.EncodeToString(sum[:])
 	return str, nil
-}
-
-func mimetypeOfTrack(ftype tag.FileType) string {
-	switch ftype {
-	case tag.MP3:
-		return "audio/mp3"
-	case tag.FLAC:
-		return "audio/flac"
-	case tag.M4A:
-		return "audio/mp4"
-	}
-	return "binary/octet-stream"
 }
 
 // secs
@@ -258,236 +242,3 @@ func skippableError(err error) bool {
 	// mp3 package chokes on certain files, so let it fail
 	return strings.Contains(str, "mp3:")
 }
-
-type guessedMeta struct {
-	ftype       tag.FileType
-	title       string
-	album       string
-	artist      string
-	albumArtist string
-	track       int
-	disc        int
-}
-
-func guessMetadata(name string, ftype tag.FileType) tag.Metadata {
-	name = strings.TrimSuffix(name, path.Ext(name))
-	if !strings.ContainsRune(name, ' ') {
-		name = strings.ReplaceAll(name, "_", " ")
-	}
-	meta := guessedMeta{
-		ftype: ftype,
-	}
-	parts := strings.Split(name, "-")
-	var nums []int
-	var strs []string
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if n, err := strconv.Atoi(p); err == nil {
-			nums = append(nums, n)
-			continue
-		}
-		strs = append(strs, p)
-	}
-
-	if len(strs) == 0 {
-		return guessedMeta{title: name, ftype: ftype}
-	}
-
-	// title + maybe track number
-	// TODO: rewrite lol
-	last := strs[len(strs)-1]
-	if lsplit := strings.Split(last, " "); len(lsplit) >= 2 {
-		maybeTrack := strings.TrimSuffix(lsplit[0], ".")
-		if strings.ContainsRune(maybeTrack, '-') {
-			nsplit := strings.Split(maybeTrack, "-")
-			d, err1 := strconv.Atoi(nsplit[0])
-			n, err2 := strconv.Atoi(nsplit[1])
-			fmt.Println(d, err1, n, err2)
-			if err1 == nil && err2 == nil {
-				meta.disc = d
-				meta.track = n
-				meta.title = strings.Join(lsplit[1:], " ")
-			} else {
-				meta.title = last
-			}
-		} else if n, err := strconv.Atoi(maybeTrack); err == nil {
-			meta.track = n
-			meta.title = strings.Join(lsplit[1:], " ")
-		} else {
-			meta.title = last
-		}
-	} else {
-		meta.title = strs[len(strs)-1]
-	}
-
-	if len(nums) > 0 {
-		lastnum := nums[len(nums)-1]
-		if meta.track != 0 {
-			meta.disc = lastnum
-		} else {
-			meta.track = lastnum
-		}
-		// if meta.title == "" && len(nums) == 2 {
-		// 	meta.title = strconv.Itoa(lastnum)
-		// 	meta.track = nums[0]
-		// }
-	}
-
-	switch len(strs) {
-	case 1:
-	case 2:
-		meta.artist = strs[0]
-	case 3:
-		meta.artist = strs[0]
-		meta.album = strs[1]
-	case 4:
-		meta.albumArtist = strs[0]
-		meta.album = strs[1]
-		meta.artist = strs[2]
-	default:
-		// give up
-		meta.title = name
-	}
-
-	return meta
-}
-
-func (m guessedMeta) Format() tag.Format          { return tag.UnknownFormat }
-func (m guessedMeta) FileType() tag.FileType      { return m.ftype }
-func (m guessedMeta) Title() string               { return m.title }
-func (m guessedMeta) Album() string               { return m.album }
-func (m guessedMeta) Artist() string              { return m.artist }
-func (m guessedMeta) Track() (int, int)           { return m.track, 0 }
-func (m guessedMeta) Disc() (int, int)            { return m.disc, 0 }
-func (m guessedMeta) AlbumArtist() string         { return "" }
-func (m guessedMeta) Composer() string            { return "" }
-func (m guessedMeta) Year() int                   { return 0 }
-func (m guessedMeta) Genre() string               { return "" }
-func (m guessedMeta) Picture() *tag.Picture       { return nil }
-func (m guessedMeta) Lyrics() string              { return "" }
-func (m guessedMeta) Comment() string             { return "" }
-func (m guessedMeta) Raw() map[string]interface{} { return map[string]interface{}{} }
-
-type multiMeta []tag.Metadata
-
-func (m multiMeta) Format() tag.Format {
-	for _, child := range m {
-		if f := child.Format(); f != "" {
-			return f
-		}
-	}
-	return tag.UnknownFormat
-}
-
-func (m multiMeta) FileType() tag.FileType {
-	for _, child := range m {
-		if f := child.FileType(); f != "" && f != tag.UnknownFileType {
-			return f
-		}
-	}
-	return tag.UnknownFileType
-}
-
-func (m multiMeta) Title() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Title() })
-}
-
-func (m multiMeta) Album() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Album() })
-}
-
-func (m multiMeta) Artist() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Artist() })
-}
-
-func (m multiMeta) AlbumArtist() string {
-	return m.try(func(meta tag.Metadata) string { return meta.AlbumArtist() })
-}
-
-func (m multiMeta) Composer() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Composer() })
-}
-
-func (m multiMeta) Genre() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Genre() })
-}
-
-func (m multiMeta) Lyrics() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Lyrics() })
-}
-func (m multiMeta) Comment() string {
-	return m.try(func(meta tag.Metadata) string { return meta.Comment() })
-}
-
-func (m multiMeta) Track() (int, int) {
-	for _, child := range m {
-		a, b := child.Track()
-		if a != 0 || b != 0 {
-			return a, b
-		}
-	}
-	return 0, 0
-}
-
-func (m multiMeta) Disc() (int, int) {
-	for _, child := range m {
-		a, b := child.Disc()
-		if a != 0 || b != 0 {
-			return a, b
-		}
-	}
-	return 0, 0
-}
-
-func (m multiMeta) Year() int {
-	for _, child := range m {
-		x := child.Year()
-		if x != 0 {
-			return x
-		}
-	}
-	return 0
-}
-func (m multiMeta) Picture() *tag.Picture {
-	for _, child := range m {
-		x := child.Picture()
-		if x != nil {
-			return x
-		}
-	}
-	return nil
-}
-
-func (m multiMeta) Raw() map[string]interface{} {
-	tags := map[string]interface{}{}
-	for _, child := range m {
-		if len(child.Raw()) > len(tags) {
-			tags = child.Raw()
-		}
-	}
-	return tags
-}
-
-func (m multiMeta) try(get func(tag.Metadata) string) string {
-	var invalid string
-	for _, child := range m {
-		if str := get(child); str != "" {
-			if !utf8.ValidString(str) {
-				invalid = str
-				continue
-			}
-			return str
-		}
-	}
-	if invalid != "" {
-		if valid := strings.ToValidUTF8(invalid, ""); valid != "" {
-			return valid
-		}
-	}
-	return ""
-}
-
-var (
-	_ tag.Metadata = guessedMeta{}
-	_ tag.Metadata = multiMeta{}
-)

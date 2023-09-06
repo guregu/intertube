@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	// "github.com/davecgh/go-spew/spew"
@@ -48,13 +47,10 @@ func buyForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		HasSub:    hasSub,
 	}
 
-	if err := getTemplate(ctx, "buy").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "buy", data, http.StatusOK)
 }
 
-func buySuccess(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	sessionID := r.URL.Query().Get("session_id")
-
-	fmt.Fprintf(w, "success sesh id %s", sessionID)
-}
+// func buySuccess(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// 	sessionID := r.URL.Query().Get("session_id")
+// 	fmt.Fprintf(w, "success sesh id %s", sessionID)
+// }

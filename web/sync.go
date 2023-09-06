@@ -50,7 +50,5 @@ func syncForm(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		Metadata: metadata,
 		Index:    index,
 	}
-	if err := getTemplate(ctx, "sync").Execute(w, data); err != nil {
-		panic(err)
-	}
+	renderTemplate(ctx, w, "sync", data, http.StatusOK)
 }

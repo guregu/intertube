@@ -225,24 +225,6 @@ func uploadFinish(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteFile(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	u, _ := userFrom(ctx)
-	id := kami.Param(ctx, "id")
-	f, err := tube.GetFile(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	if f.UserID != u.ID {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintln(w, "Forbidden")
-		return
-	}
-	if err := f.Delete(ctx); err != nil {
-		panic(err)
-	}
-	http.Redirect(w, r, "//"+Domain+"/account/files", http.StatusSeeOther)
-}
-
 func encodeContentDisp(filename string) string {
 	ext := path.Ext(filename)
 	// return "attachment; filename*=UTF-8''" + url.PathEscape(filename)

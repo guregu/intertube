@@ -61,7 +61,11 @@ func parseTemplates() *template.Template {
 	if err != nil {
 		panic(err)
 	}
-	glob := filepath.Join(here, "assets", "templates", "*.gohtml")
+
+	globs := []string{
+		filepath.Join(here, "assets", "templates", "*.gohtml"),
+		filepath.Join(here, "assets", "templates", "*.gojs"),
+	}
 
 	t := template.New("root").Funcs(template.FuncMap{
 		"render":     renderFunc(context.Background()),
@@ -144,7 +148,9 @@ func parseTemplates() *template.Template {
 		},
 	})
 
-	t = template.Must(t.ParseGlob(glob))
+	for _, glob := range globs {
+		template.Must(t.ParseGlob(glob))
+	}
 
 	// if DebugMode {
 	// 	for _, tt := range t.Templates() {
@@ -195,7 +201,6 @@ func renderCSSFunc(ctx context.Context, active string) func(string, interface{})
 }
 
 // hot reload for dev
-// this is racy but i don't care. lol
 func WatchFiles() func() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -207,12 +212,12 @@ func WatchFiles() func() error {
 			case ev := <-watcher.Events:
 				log.Println("watch event:", ev)
 				switch filepath.Ext(ev.Name) {
-				case ".gohtml":
+				case ".gohtml", ".gojs":
 					log.Println("Reloading templates...", filepath.Base(ev.Name))
 					templates = parseTemplates()
 				case ".toml":
 					log.Println("Reloading translations...", filepath.Base(ev.Name))
-					loadTranslations()
+					loadTranslations() // TODO: this is racy/busted, newer Go versions get mad
 				}
 			case err := <-watcher.Errors:
 				log.Println("watch error:", err)
@@ -230,5 +235,6 @@ func WatchFiles() func() error {
 	if err := watcher.Add(filepath.Join(here, "assets", "text")); err != nil {
 		panic(err)
 	}
+	log.Println("Hot reloading enabled")
 	return watcher.Close
 }

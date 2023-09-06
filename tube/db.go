@@ -38,6 +38,7 @@ func Init(region, prefix, endpoint string, debug bool) {
 	if endpoint == "" {
 		sesh, err = session.NewSession()
 	} else {
+		log.Println("Using DynamoDB endpoint:", endpoint)
 		sesh, err = session.NewSession(&aws.Config{
 			Endpoint:    &endpoint,
 			Credentials: credentials.NewStaticCredentials("dummy", "dummy", ""),

@@ -27,7 +27,7 @@ func init() {
 		"/external/stripe"))
 	kami.Use("/", requireLogin)
 
-	kami.Get("/", Index)
+	kami.Get("/", homepage)
 	kami.Get("/terms", termsOfService)
 	kami.Get("/privacy", privacyPolicy)
 
@@ -73,7 +73,6 @@ func init() {
 
 	kami.Post("/cache/reset", resetCache)
 
-	kami.Get("/forum", forum)
 	kami.Get("/more", moreStuff)
 	kami.Get("/subsonic", subsonicHelp)
 
@@ -122,11 +121,14 @@ func init() {
 }
 
 func Load() {
-	log.Println("Loading templates")
+	log.Println("Loading templates...")
 	templates = parseTemplates()
-	log.Println("Loading translations")
+
+	log.Println("Loading translations...")
 	loadTranslations()
-	log.Println("Init Stripe")
+
+	log.Println("Checking optional features...")
 	initStripe()
+
 	log.Println("Loaded up")
 }

@@ -45,7 +45,7 @@ By default it looks at `config.toml` in the working directory.
 
 - [x] inter.tube launch
 - [x] Local dev mode
-- [ ] Align latest changes with production
+- [x] Align latest changes with production
 - [ ] Proper self-hosting guide
 - [ ] ???
 - [ ] Profit

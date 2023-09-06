@@ -3,7 +3,7 @@ module github.com/guregu/intertube/tubesync
 go 1.21.0
 
 require (
-	github.com/guregu/intertube v0.0.0-20230905102324-c17d95a5d491
+	github.com/guregu/intertube v0.0.0-20230906163359-85e3af45f847
 	golang.org/x/net v0.15.0
 	golang.org/x/term v0.12.0
 )

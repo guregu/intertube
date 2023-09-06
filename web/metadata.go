@@ -238,7 +238,7 @@ func (m multiMeta) try(get func(tag.Metadata) string) string {
 	return ""
 }
 
-var id3v2to3 = map[string]string{
+var id3v1to2 = map[string]string{
 	"TT2": "TIT2",
 	"TP1": "TPE1",
 	"TAL": "TALB",
@@ -253,7 +253,7 @@ var id3v2to3 = map[string]string{
 	// "COM": "COMM", // panics on *tag.Comm conversion
 }
 
-// unfuckID3 fixes the given metadata if it is ID3 format but with ID2 keys
+// unfuckID3 fixes the given metadata if it is ID3v2 format but with ID3v1 keys
 // (yes, such terrible files actually exist)
 func unfuckID3(metadata tag.Metadata) {
 	if metadata.Format() != tag.ID3v2_3 {
@@ -266,10 +266,11 @@ func unfuckID3(metadata tag.Metadata) {
 			if err == nil {
 				raw["APIC"] = pic
 			}
+			delete(raw, k)
 			continue
 		}
 		if len(k) == 4 && k[3] == 0 {
-			if fixed, ok := id3v2to3[k[:3]]; ok {
+			if fixed, ok := id3v1to2[k[:3]]; ok {
 				raw[fixed] = v
 				delete(raw, k)
 			}

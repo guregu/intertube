@@ -7,7 +7,9 @@ import (
 	"github.com/guregu/intertube/tube"
 )
 
-func Index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// mostly-static pages
+
+func homepage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, _ := userFrom(ctx)
 	data := struct {
 		User tube.User
@@ -15,16 +17,6 @@ func Index(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		User: u,
 	}
 	renderTemplate(ctx, w, "index", data, http.StatusOK)
-}
-
-func forum(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	u, _ := userFrom(ctx)
-	data := struct {
-		User tube.User
-	}{
-		User: u,
-	}
-	renderTemplate(ctx, w, "forum", data, http.StatusOK)
 }
 
 func moreStuff(ctx context.Context, w http.ResponseWriter, r *http.Request) {

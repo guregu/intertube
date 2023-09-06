@@ -34,17 +34,14 @@ var (
 
 func initStripe() {
 	key := os.Getenv("STRIPE_KEY")
-	if key == "" {
-		log.Println("no stripe private key")
+	stripePublicKey = os.Getenv("STRIPE_PUBLIC")
+	if key == "" || stripePublicKey == "" {
+		log.Println("Payment is disabled (missing Stripe key)")
 		return
 	}
+
 	stripe.Key = key
 	UseStripe = true
-
-	stripePublicKey = os.Getenv("STRIPE_PUBLIC")
-	if stripePublicKey == "" {
-		log.Println("no stripe public key")
-	}
 
 	stripeSigSecret = os.Getenv("STRIPE_SIG")
 	if stripeSigSecret == "" {

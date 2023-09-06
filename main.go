@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/guregu/intertube/storage"
@@ -80,14 +81,23 @@ func main() {
 	// os.Exit(0)
 
 	// local server for dev
-	log.Println("deploydate:", web.Deployed)
+	log.Println("Build date:", web.Deployed)
 	web.DebugMode = true
 	web.Load()
 
-	log.Println("Starting up local webserver on port 8000")
+	log.Println("Starting up local webserver at:", bindAddr())
 	closeWatch := web.WatchFiles()
 	if err := http.ListenAndServe(*bindFlag, nil); err != nil {
 		panic(err)
 	}
 	closeWatch()
+}
+
+func bindAddr() string {
+	addr := "http://"
+	if strings.HasPrefix(*bindFlag, ":") {
+		addr += "localhost"
+	}
+	addr += *bindFlag
+	return addr
 }

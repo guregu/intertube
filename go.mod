@@ -35,6 +35,7 @@ require (
 	github.com/icza/bitio v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mewkiz/pkg v0.0.0-20190919212034-518ade7978e2 // indirect
+	github.com/rs/cors v1.10.0
 	github.com/zenazn/goji v1.0.1 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect

@@ -14,6 +14,7 @@ import (
 
 	// "github.com/davecgh/go-spew/spew"
 	"github.com/guregu/kami"
+	"github.com/rs/cors"
 
 	"github.com/guregu/intertube/tube"
 )
@@ -41,7 +42,9 @@ func init() {
 		kami.Post(subsonicAPIPrefix+path, h)
 	}
 
-	// kami.Use(subsonicAPIPrefix, subsonic)
+	// lax CORS for Subsonic APIs
+	kami.Use(subsonicAPIPrefix, cors.AllowAll().Handler)
+
 	add("ping", subsonicPing)
 	add("getLicense", subsonicGetLicense)
 	add("getUser", subsonicGetUser)
@@ -357,10 +360,6 @@ func writeSubsonic(ctx context.Context, w http.ResponseWriter, r *http.Request, 
 		}
 
 		renderXML(w, resp, http.StatusOK)
-
-		if err := xml.NewEncoder(w).Encode(resp); err != nil {
-			panic(err)
-		}
 	default:
 		panic("unknown format: " + f)
 	}

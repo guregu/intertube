@@ -313,7 +313,10 @@ function playTrack(id, keepPaused) {
     PLAYER.dataset.n++;
     AUDIO.src = track.dataset.src;
     PLAYER.querySelector("figcaption").textContent = trackName(track);
-    PLAYER.querySelector(".download-btn").href = track.dataset.src;
+
+    var dlbtn = PLAYER.querySelector(".download-btn");
+    dlbtn.href = track.dataset.src;
+    dlbtn.download = track.dataset.filename;
 
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = toMetadata(track);

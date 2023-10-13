@@ -13,7 +13,9 @@
 				<ol class="meat-merge">
 				{{range $album}}
 					<li {{with .Number}} value="{{.}}" {{end}}
-						id="{{.ID}}" class="track" data-date="{{.Date}}" data-src="{{.FileURL}}" data-state="stopped"
+						id="{{.ID}}" class="track" data-date="{{.Date}}"
+						data-src="{{.FileURL}}" data-filename="{{.Filename}}"
+						data-state="stopped" data-resume="{{.Resume}}"
 						data-artist="{{.Artist}}" data-title="{{.Title}}" data-album="{{.Album}}"
 						onclick="return toggleOrPlay('{{.ID}}', arguments[0]),false;">
 						<span class="track-title">{{.Info.Title}}</span>

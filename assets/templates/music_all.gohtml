@@ -20,7 +20,9 @@
 	</thead>
 	<tbody id="tracks-list" class="meat" data-sort="{{$.Sort}}" data-reverse="{{$.Reverse}}">
 		{{range $.Tracks}}
-			<tr id="{{.ID}}" class="track" data-date="{{.Date}}" data-src="{{.FileURL}}" data-state="stopped" data-resume="{{.Resume}}"
+			<tr id="{{.ID}}" class="track" data-date="{{.Date}}"
+				data-src="{{.FileURL}}" data-filename="{{.Filename}}"
+				data-state="stopped" data-resume="{{.Resume}}"
 				data-artist="{{.Info.Artist}}" data-album-artist="{{.Info.AlbumArtist}}" data-any-artist="{{.AnyArtist}}" 
 				data-title="{{.Info.Title}}" data-album="{{.Info.Album}}" data-genre="{{.Genre}}"
 				{{if (gt (len .Tags) 0)}} data-tags="{{.Tags | bespace}}" {{end}}

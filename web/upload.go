@@ -115,9 +115,10 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 
 	// var tags tag.Metadata
 	var tags multiMeta
-	if got, err := tag.ReadID3v1Tags(raw); err == nil {
+	if got, err := tag.ReadID3v2Tags(raw); err == nil {
 		tags = append(tags, got)
 	}
+	// spew.Dump(tags)
 	raw.Seek(0, io.SeekStart)
 	if got, err := tag.ReadFrom(raw); err == nil {
 		tags = append(tags, got)

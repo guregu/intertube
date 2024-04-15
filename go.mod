@@ -7,7 +7,7 @@ require (
 	github.com/akrylysov/algnhsa v1.1.0
 	github.com/antonmedv/expr v1.15.5
 	github.com/aws/aws-lambda-go v1.46.0
-	github.com/aws/aws-sdk-go v1.51.9
+	github.com/aws/aws-sdk-go v1.51.21
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fsnotify/fsnotify v1.7.0
@@ -19,12 +19,12 @@ require (
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/mewkiz/flac v1.0.10
 	github.com/nicksnyder/go-i18n/v2 v2.4.0
-	github.com/pelletier/go-toml/v2 v2.2.0
+	github.com/pelletier/go-toml/v2 v2.2.1
 	github.com/posener/order v0.0.1
 	github.com/stripe/stripe-go/v72 v72.122.0
-	golang.org/x/crypto v0.21.0
-	golang.org/x/net v0.22.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/crypto v0.22.0
+	golang.org/x/net v0.24.0
+	golang.org/x/sync v0.7.0
 	golang.org/x/text v0.14.0
 )
 
@@ -36,9 +36,9 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/icza/bitio v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/mewkiz/pkg v0.0.0-20231012081350-95d6616c5403 // indirect
+	github.com/mewkiz/pkg v0.0.0-20240415115754-71721c85c0a2 // indirect
 	github.com/rs/cors v1.10.1
 	github.com/zenazn/goji v1.0.1 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 )

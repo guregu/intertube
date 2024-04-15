@@ -212,6 +212,7 @@ const (
 
 func Init(cfg Config) {
 	var client *s3.S3
+	awsClient := newS3("us-west-2", "", "", "")
 	switch cfg.Type {
 	case StorageTypeS3:
 		client = newS3(cfg.Region, cfg.AccessKeyID, cfg.AccessKeySecret, cfg.Endpoint)
@@ -240,8 +241,8 @@ func Init(cfg Config) {
 	if cfg.CacheBucket != "" {
 		CacheBucket = S3Bucket{
 			Name: cfg.CacheBucket,
-			S3:   client,
-			Type: cfg.Type,
+			S3:   awsClient,
+			Type: StorageTypeS3,
 		}
 	}
 }

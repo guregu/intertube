@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -61,6 +62,17 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 		return tube.Track{}, err
 	}
 
+	if fmeta.TrackID != "" {
+		log.Println("already exists?", fmeta.TrackID)
+		track, err := tube.GetTrack(ctx, user.ID, fmeta.TrackID)
+		if err == nil {
+			return track, nil
+		}
+		log.Println("error getting pre-existing track:", err)
+	}
+
+	log.Println("get file ...")
+
 	r, err := storage.UploadsBucket.Get(key)
 	if err != nil {
 		return tube.Track{}, err
@@ -93,6 +105,8 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	}
 	raw.Seek(0, io.SeekStart)
 
+	log.Println("calcDuration ...")
+
 	dur, err := calcDuration(raw, format)
 	if err != nil && !skippableError(err) {
 		return tube.Track{}, err
@@ -112,6 +126,8 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	tags = append(tags, guessMetadata(fmeta.Name, format))
 	unfuckID3(tags)
 	raw.Seek(0, io.SeekStart)
+
+	log.Println("tag.SumAll ...")
 
 	sum, err := tag.SumAll(raw)
 	if err != nil {
@@ -151,21 +167,27 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 	track.Disc, track.Discs = tags.Disc()
 	track.ApplyInfo(trackInfo)
 
+	log.Println("copyUploadToFiles ...")
 	err = copyUploadToFiles(ctx, track.StorageKey(), b2ID, fmeta)
 	if err != nil {
 		return tube.Track{}, err
 	}
 
 	if pic := tags.Picture(); pic != nil {
+		log.Println("savePic ...")
 		track.Picture, err = savePic(pic.Data, pic.Ext, pic.Type, pic.Description)
 		if err != nil {
 			return tube.Track{}, err
 		}
 	}
 
+	log.Println("track.Create ...")
+
 	if err := track.Create(ctx); err != nil {
 		return tube.Track{}, err
 	}
+
+	log.Println("SetTrackID ...")
 
 	if err := fmeta.SetTrackID(track.ID); err != nil {
 		return tube.Track{}, err
@@ -220,6 +242,7 @@ func calcDuration(r io.ReadSeeker, ftype tag.FileType) (int, error) {
 		if err != nil {
 			return 0, err
 		}
+		defer stream.Close()
 		sec := stream.Info.NSamples / uint64(stream.Info.SampleRate)
 		return int(sec), nil
 	case tag.M4A:

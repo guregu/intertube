@@ -10,7 +10,7 @@ import (
 
 	// "github.com/davecgh/go-spew/spew"
 
-	"github.com/antonmedv/expr"
+	"github.com/expr-lang/expr"
 	"github.com/posener/order"
 	"golang.org/x/sync/errgroup"
 

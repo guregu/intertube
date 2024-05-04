@@ -3,8 +3,8 @@ package web
 import (
 	"time"
 
-	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
 	"github.com/guregu/intertube/tube"
 )
 

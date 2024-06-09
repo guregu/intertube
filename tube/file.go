@@ -21,6 +21,8 @@ type File struct {
 	Ext      string
 	Time     time.Time
 	LocalMod int64
+	Queued   time.Time
+	Started  time.Time
 	Finished time.Time
 	Ready    bool
 	Deleted  bool
@@ -95,8 +97,35 @@ func (f *File) SetTrackID(tID string) error {
 		Value(f)
 }
 
+func (f *File) SetQueued(ctx context.Context, at time.Time) error {
+	files := dynamoTable("Files")
+	return files.Update("ID", f.ID).
+		Set("Queued", at).
+		ValueWithContext(ctx, f)
+}
+
+func (f *File) SetStarted(ctx context.Context, at time.Time) error {
+	files := dynamoTable("Files")
+	return files.Update("ID", f.ID).
+		Set("Started", at).
+		ValueWithContext(ctx, f)
+}
+
 func (f File) Path() string {
 	return "up/" + f.ID
+}
+
+func (f File) Status() string {
+	switch {
+	case f.Ready, !f.Finished.IsZero():
+		return "done"
+	case !f.Started.IsZero():
+		return "processing"
+	case !f.Queued.IsZero():
+		return "queued"
+	default:
+		return "uploading"
+	}
 }
 
 func (f File) Glyph() string {

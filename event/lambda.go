@@ -8,6 +8,8 @@ func StartLambda(mode string) {
 	switch mode {
 	case "CHANGE":
 		lambda.Start(handleChange)
+	case "FILE":
+		lambda.Start(handleFileQueue)
 	}
 	panic("unhandled mode: " + mode)
 }

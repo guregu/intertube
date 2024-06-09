@@ -10,3 +10,4 @@ deploydate
 */node_modules
 config.toml
 .DS_Store
+bootstrap

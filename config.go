@@ -27,6 +27,10 @@ type Config struct {
 		Region            string `toml:"region"`
 		Endpoint          string `toml:"endpoint"`
 	} `toml:"storage"`
+	Queue struct {
+		SQS    string `toml:"sqs"`
+		Region string `toml:"region"`
+	} `toml:"queue"`
 }
 
 func readConfig(path string) (Config, error) {

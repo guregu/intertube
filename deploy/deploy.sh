@@ -14,3 +14,4 @@ aws s3 cp --region $S3_REGION $TAR_NAME s3://$S3_BUCKET/$APP_NAME/release/$CIRCL
 # lambda deploy
 aws lambda update-function-code --region $S3_REGION --function-name "tube-web" --s3-bucket $S3_BUCKET --s3-key $APP_NAME/release/$CIRCLE_BUILD_NUM/$TAR_NAME --no-cli-pager
 aws lambda update-function-code --region $S3_REGION --function-name "tube-trigger" --s3-bucket $S3_BUCKET --s3-key $APP_NAME/release/$CIRCLE_BUILD_NUM/$TAR_NAME --no-cli-pager
+aws lambda update-function-code --region $S3_REGION --function-name "tube-process" --s3-bucket $S3_BUCKET --s3-key $APP_NAME/release/$CIRCLE_BUILD_NUM/$TAR_NAME --no-cli-pager

@@ -178,6 +178,37 @@ func uploadStart2(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, output, http.StatusOK)
 }
 
+func ProcessUpload(ctx context.Context, f *tube.File, u tube.User, uploadPath string) (tube.Track, error) {
+	if f.Deleted || f.UserID != u.ID {
+		return tube.Track{}, fmt.Errorf("forbidden")
+	}
+
+	if err := f.SetStarted(ctx, time.Now().UTC()); err != nil {
+		return tube.Track{}, err
+	}
+
+	head, err := storage.UploadsBucket.Head(f.Path())
+	if err != nil {
+		return tube.Track{}, fmt.Errorf("file not found in storage")
+	}
+	if err := f.Finish(ctx, head.Type, head.Size); err != nil {
+		return tube.Track{}, err
+	}
+	if head.Size > maxFileSize {
+		storage.FilesBucket.Delete(f.Path())
+		return tube.Track{}, fmt.Errorf("file too big")
+	}
+
+	track, err := handleUpload(ctx, f.Path(), u, uploadPath)
+	if err != nil {
+		return track, err
+	}
+	if err := u.UpdateLastMod(ctx); err != nil {
+		return track, err
+	}
+	return track, nil
+}
+
 func uploadFinish(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	u, ok := userFrom(ctx)
 	if !ok {
@@ -193,34 +224,46 @@ func uploadFinish(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if f.Deleted || f.UserID != u.ID {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Println("nope")
+
+	if f.Ready && f.TrackID != "" {
+		track, err := tube.GetTrack(ctx, u.ID, f.TrackID)
+		if err != nil {
+			panic(err)
+		}
+		if err := json.NewEncoder(w).Encode(&track); err != nil {
+			panic(err)
+		}
 		return
 	}
 
-	head, err := storage.UploadsBucket.Head(f.Path())
-	if err != nil {
-		panic(err)
-	}
-	if err := f.Finish(ctx, head.Type, head.Size); err != nil {
-		panic(err)
-	}
-	if head.Size > maxFileSize {
-		storage.FilesBucket.Delete(f.Path())
-		w.WriteHeader(400)
-		fmt.Println("nice try. file too big.")
+	if !storage.UsingQueue() {
+		track, err := ProcessUpload(ctx, &f, u, bID)
+		if err != nil {
+			panic(err)
+		}
+		if err := json.NewEncoder(w).Encode(&track); err != nil {
+			panic(err)
+		}
+		return
 	}
 
-	track, err := handleUpload(ctx, f.Path(), u, bID)
-	if err != nil {
-		panic(err)
-	}
-	if err := u.UpdateLastMod(ctx); err != nil {
-		panic(err)
+	if f.Queued.IsZero() {
+		err = storage.EnqueueFile(storage.FileEvent{
+			FileID: f.ID,
+			UserID: u.ID,
+			Path:   bID,
+		})
+		if err != nil {
+			panic(err)
+		}
+		if err := f.SetQueued(ctx, time.Now().UTC()); err != nil {
+			panic(err)
+		}
 	}
 
-	if err := json.NewEncoder(w).Encode(&track); err != nil {
+	w.Header().Set("Tube-Upload-Status", f.Status())
+	w.WriteHeader(http.StatusAccepted)
+	if err := json.NewEncoder(w).Encode(f); err != nil {
 		panic(err)
 	}
 }

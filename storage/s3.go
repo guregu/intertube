@@ -199,6 +199,10 @@ type Config struct {
 
 	// for R2
 	CFAccountID string
+
+	// for SQS
+	SQSURL    string
+	SQSRegion string
 }
 
 type StorageType string
@@ -244,6 +248,10 @@ func Init(cfg Config) {
 			S3:   awsClient,
 			Type: StorageTypeS3,
 		}
+	}
+
+	if cfg.SQSURL != "" {
+		UseSQS(cfg.SQSRegion, cfg.SQSURL)
 	}
 }
 

@@ -47,6 +47,8 @@ func main() {
 			Region:          cfg.Storage.Region,
 			Endpoint:        cfg.Storage.Endpoint,
 			CFAccountID:     cfg.Storage.CloudflareAccount,
+			SQSURL:          cfg.Queue.SQS,
+			SQSRegion:       cfg.Queue.Region,
 		}
 		storage.Init(storageCfg)
 	}
@@ -61,7 +63,7 @@ func main() {
 			log.Println("deploy time:", web.Deployed)
 			web.Load()
 			startLambda()
-		case "CHANGE":
+		case "CHANGE", "FILE":
 			startEventLambda(mode)
 		}
 		return

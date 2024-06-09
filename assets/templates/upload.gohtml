@@ -406,6 +406,16 @@
 					work();
 					console.log("job success", job.pseudoID);
 					incStat("success");
+				} else if (xhr.status == 202) {
+					//setProgress(fileID, -1);
+					console.log("file queued serverside...", fileID);
+					var msg = "";
+					var status = xhr.getResponseHeader("Tube-Upload-Status");
+					if (status) {
+						msg = status;
+					}
+					//setStatusMsg(fileID, msg);
+					setTimeout(finishS3Upload, RETRY_DELAY * 10, info, retries, job);
 				} else {
 					// setProgress(fileID, -1);
 					setError(fileID, xhr.response);
@@ -470,10 +480,12 @@
 				return;
 			}
 			var bar = track.querySelector(".track-progress");
-			if (progress >= 0) {
-				bar.setAttribute("value", progress);
-			} else {
-				bar.removeAttribute("value");
+			if (bar) {
+				if (progress >= 0) {
+					bar.setAttribute("value", progress);
+				} else {
+					bar.removeAttribute("value");
+				}
 			}
 			if (progress == 100) {
 				track.querySelector(".track-icon").textContent = "✔️"

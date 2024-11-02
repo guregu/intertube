@@ -124,7 +124,7 @@ news_content = "[9/25] hello everyone. thank you for testing my web site. we are
 
 # upload
 upload_title = "upload tracks"
-upload_intro = "use this form or drag & drop music files to upload them to your library. you can select multiple files to upload. you can drag & drop folders. if you click the little check box you can upload whole directories instead of files. currently mp3/flac/m4a only."
+upload_intro = "use this form or drag & drop music files to upload them to your library. you can select multiple files to upload. you can drag & drop folders. if you click the little check box you can upload whole directories instead of files. currently mp3/flac/m4a only. ogg has limited support"
 upload_full = "storage full"
 upload_fullexplain = "you don't have any free space left. please upgrade your plan or delete some files."
 upload_cant = "uploading is disabled until you upgrade or free space."
@@ -251,7 +251,7 @@ buy_subbed = "you are currently subscribed to: {{.v0}}"
 buy_grandfathered = "you aren't subscribed to anything"
 buy_subexpired = "your subscription has expired"
 buy_pitch = "sound good?"
-buy_regplz = "" #TODO
+buy_regplz = ""                                                                                                          #TODO
 
 # checkout results
 checkout_title = "checkout successful"

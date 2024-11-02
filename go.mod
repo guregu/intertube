@@ -13,8 +13,9 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/guregu/dynamo v1.22.2
 	github.com/guregu/kami v2.2.1+incompatible
-	github.com/guregu/tag v0.0.2
+	github.com/guregu/tag v0.0.3
 	github.com/hajimehoshi/go-mp3 v0.3.4
+	github.com/jfreymuth/oggvorbis v1.0.5
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/mewkiz/flac v1.0.10
@@ -28,7 +29,10 @@ require (
 	golang.org/x/text v0.15.0
 )
 
-require google.golang.org/protobuf v1.34.0 // indirect
+require (
+	github.com/jfreymuth/vorbis v1.0.2 // indirect
+	google.golang.org/protobuf v1.34.0 // indirect
+)
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

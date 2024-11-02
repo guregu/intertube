@@ -16,6 +16,7 @@ import (
 
 	"github.com/guregu/tag"
 	"github.com/hajimehoshi/go-mp3"
+	"github.com/jfreymuth/oggvorbis"
 	"github.com/mewkiz/flac"
 	"golang.org/x/crypto/sha3"
 
@@ -98,9 +99,11 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 			format = tag.FLAC
 		case ".m4a":
 			format = tag.M4A
+		case ".ogg":
+			format = tag.OGG
 		}
 	}
-	if format != tag.MP3 && format != tag.FLAC && format != tag.M4A {
+	if format != tag.MP3 && format != tag.FLAC && format != tag.M4A && format != tag.OGG {
 		return tube.Track{}, fmt.Errorf("only mp3/flac/m4a supported right now (got: %v)", format)
 	}
 	raw.Seek(0, io.SeekStart)
@@ -115,6 +118,12 @@ func handleUpload(ctx context.Context, key string, user tube.User, b2ID string) 
 
 	// var tags tag.Metadata
 	var tags multiMeta
+	if format == tag.OGG {
+		if got, err := tag.ReadOGGTags(raw); err == nil {
+			tags = append(tags, got)
+		}
+		raw.Seek(0, io.SeekStart)
+	}
 	if got, err := tag.ReadID3v2Tags(raw); err == nil {
 		tags = append(tags, got)
 	}
@@ -254,6 +263,15 @@ func calcDuration(r io.ReadSeeker, ftype tag.FileType) (int, error) {
 		// return 0, err
 		// }
 		// return secs, nil
+	case tag.OGG:
+		length, format, err := oggvorbis.GetLength(r)
+		if err != nil {
+			// TODO: verify
+			log.Println("OGG ERROR:", err)
+			return 0, nil
+		}
+		sec := length / int64(format.SampleRate)
+		return int(sec), nil
 	}
 	return 0, fmt.Errorf("unknown type: %v", ftype)
 }

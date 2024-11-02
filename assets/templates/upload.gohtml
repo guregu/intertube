@@ -55,7 +55,7 @@
 			<div>
 				<form method="post" action="/upload/track" enctype="multipart/form-data" id="file-upload-form" onsubmit="return uploadFile(),false;">
 					<label for="file-input"><b>{{tr "upload_label"}}</b>:
-					<input type="file" name="file" id="file-input" accept=".mp3,.flac,audio/flac,audio/x-flac,.m4a" multiple> <input type="submit" id="file-upload-button" value='{{tr "upload_button"}}'> <br>
+					<input type="file" name="file" id="file-input" accept=".mp3,.flac,audio/flac,audio/x-flac,.m4a,.ogg,audio/ogg" multiple> <input type="submit" id="file-upload-button" value='{{tr "upload_button"}}'> <br>
 					<label for="file-enabledir">{{tr "enabledirectories"}}:</label> <input type="checkbox" id="file-enabledir" onchange="return enableDirectories(this),false;"><br>
 					<label for="file-skipdupe">{{tr "upload_skipdupe"}}:</label> <input type="checkbox" id="file-skipdupe" checked><br>
 				</form>
@@ -64,9 +64,9 @@
 			<hr>
 
 			<p>
-				<span id="stat-success">0</span> successful, 
-				<span id="stat-skipped">0</span> skipped, 
-				<span id="stat-failed">0</span> failed, 
+				<span id="stat-success">0</span> successful,
+				<span id="stat-skipped">0</span> skipped,
+				<span id="stat-failed">0</span> failed,
 				<span id="stat-pending">0</span> pending
 			</p>
 
@@ -228,7 +228,7 @@
 			if (resetRetry) {
 				file.retries = 0;
 			}
-			
+
 			var pseudoID = retryID || null;
 			if (pseudoID) {
 				unsetError(pseudoID);
@@ -244,8 +244,8 @@
 			}
 
 			if (file.type != "audio/mpeg" && file.type != "audio/mp3" && file.type != "audio/flac" && file.type != "audio/x-flac" &&
-				file.type != "audio/mp4" && file.type != "audio/m4a" && file.type != "audio/x-m4a" &&
-				!file.name.endsWith(".mp3") && !file.name.endsWith(".flac") && !file.name.endsWith(".m4a")) {
+				file.type != "audio/mp4" && file.type != "audio/m4a" && file.type != "audio/x-m4a" && file.type != "audio/ogg" &&
+				!file.name.endsWith(".mp3") && !file.name.endsWith(".flac") && !file.name.endsWith(".m4a") && !file.name.endsWith(".ogg")) {
 				setError(pseudoID, '{{tr "badfiletype"}}');
 				return;
 			}
@@ -499,7 +499,7 @@
 				console.log("no track:", id, filename);
 				return;
 			}
-			
+
 			var bar = track.querySelector(".track-progress");
 			bar.setAttribute("value", 100);
 
